@@ -1,91 +1,91 @@
 {
   "churn_classification": {
-    "roc_auc": 0.9440093384282308,
-    "f1_score": 0.6976744186046512,
-    "cv_roc_auc_mean": 0.995585695743423,
-    "n_features": 187,
-    "baseline_gb_roc_auc": 0.9388412766509363,
+    "roc_auc": 0.9454859275074577,
+    "f1_score": 0.6880733944954128,
+    "cv_roc_auc_mean": 0.9953869581141271,
+    "n_features": 184,
+    "baseline_gb_roc_auc": 0.9384322215681775,
     "top_shap_drivers": [
       {
         "feature": "txn_count",
-        "mean_abs_shap": 2.903353452682495
+        "mean_abs_shap": 2.8932340145111084
       },
       {
         "feature": "Renewal_Risk_Flag_Low",
-        "mean_abs_shap": 1.1862293481826782
+        "mean_abs_shap": 1.2251851558685303
       },
       {
         "feature": "txn_mean_payment_delay_days",
-        "mean_abs_shap": 0.46198317408561707
-      },
-      {
-        "feature": "escalated_ticket_ratio",
-        "mean_abs_shap": 0.24550768733024597
+        "mean_abs_shap": 0.4321715533733368
       },
       {
         "feature": "Relative_Churn_Risk_Medium",
-        "mean_abs_shap": 0.24105903506278992
+        "mean_abs_shap": 0.2398303896188736
       },
       {
         "feature": "txn_renewal_count",
-        "mean_abs_shap": 0.21054162085056305
+        "mean_abs_shap": 0.22259771823883057
       },
       {
         "feature": "usage_mean_license_utilization_pct",
-        "mean_abs_shap": 0.20783662796020508
-      },
-      {
-        "feature": "Relative_Churn_Risk_Low",
-        "mean_abs_shap": 0.1973809003829956
-      },
-      {
-        "feature": "Renewal_Risk_Flag_Medium",
-        "mean_abs_shap": 0.18843932449817657
-      },
-      {
-        "feature": "tickets_per_tenure_month",
-        "mean_abs_shap": 0.1784120500087738
-      },
-      {
-        "feature": "Sessions_Per_User_Day",
-        "mean_abs_shap": 0.17472857236862183
-      },
-      {
-        "feature": "Business_Model_B2C",
-        "mean_abs_shap": 0.172662153840065
+        "mean_abs_shap": 0.21869073808193207
       },
       {
         "feature": "active_quarters",
-        "mean_abs_shap": 0.16077838838100433
+        "mean_abs_shap": 0.20542819797992706
+      },
+      {
+        "feature": "Relative_Churn_Risk_Low",
+        "mean_abs_shap": 0.20353390276432037
+      },
+      {
+        "feature": "escalated_ticket_ratio",
+        "mean_abs_shap": 0.20347213745117188
+      },
+      {
+        "feature": "Sessions_Per_User_Day",
+        "mean_abs_shap": 0.18360204994678497
+      },
+      {
+        "feature": "tickets_per_tenure_month",
+        "mean_abs_shap": 0.17309245467185974
+      },
+      {
+        "feature": "Renewal_Risk_Flag_Medium",
+        "mean_abs_shap": 0.17187932133674622
+      },
+      {
+        "feature": "Business_Model_B2C",
+        "mean_abs_shap": 0.1596488505601883
       },
       {
         "feature": "quarterly_revenue_last",
-        "mean_abs_shap": 0.14844460785388947
+        "mean_abs_shap": 0.1428057998418808
       },
       {
-        "feature": "Legal_Entity_Type",
-        "mean_abs_shap": 0.12372667342424393
+        "feature": "NPS_Score",
+        "mean_abs_shap": 0.13286204636096954
       }
     ]
   },
   "revenue_regression": {
     "selected_model": "gradient_boosting",
-    "rmse": 1390.4914828054505,
-    "mae": 684.2756398302744,
-    "r2": 0.966080476746727,
-    "adjusted_r2": 0.958268960923621,
-    "cv_r2_mean": 0.9565379123938602,
-    "cv_r2_std": 0.011543400589258845,
+    "rmse": 1363.276037329704,
+    "mae": 692.3673714746251,
+    "r2": 0.9673952649360784,
+    "adjusted_r2": 0.9600341959155121,
+    "cv_r2_mean": 0.9557450487686092,
+    "cv_r2_std": 0.01048274192310381,
     "all_candidates": {
       "xgboost": {
-        "rmse": 1394.828215229388,
-        "mae": 645.5746459960938,
-        "r2": 0.9658685922622681
+        "rmse": 1390.6072414596438,
+        "mae": 653.2424926757812,
+        "r2": 0.9660748243331909
       },
       "gradient_boosting": {
-        "rmse": 1390.4914828054505,
-        "mae": 684.2756398302744,
-        "r2": 0.966080476746727
+        "rmse": 1363.276037329704,
+        "mae": 692.3673714746251,
+        "r2": 0.9673952649360784
       }
     }
   },
@@ -119,7 +119,7 @@
         "silhouette": 0.37596570048166633,
         "davies_bouldin": 1.188558071901896,
         "calinski_harabasz": 2723.3710207020417,
-        "inertia": 29355.40631108848
+        "inertia": 29355.40631108849
       },
       {
         "k": 3,
@@ -161,7 +161,7 @@
         "silhouette": 0.2560463638005221,
         "davies_bouldin": 1.324434778379743,
         "calinski_harabasz": 1815.275216612268,
-        "inertia": 12791.25161120459
+        "inertia": 12791.251611204592
       },
       {
         "k": 9,
@@ -175,7 +175,7 @@
         "silhouette": 0.25616218594538676,
         "davies_bouldin": 1.2746595025118546,
         "calinski_harabasz": 1655.7347816505328,
-        "inertia": 11376.673958190275
+        "inertia": 11376.673958190273
       }
     ]
   }

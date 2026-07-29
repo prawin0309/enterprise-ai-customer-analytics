@@ -171,32 +171,33 @@ python -m jupyter lab notebooks\EDA_and_Modeling.ipynb
 ## Model Performance
 
 All figures measured on a stratified 20% hold-out set (`random_state=42`), 5,000 customers,
-187 modelling features.
+184 modelling features. The pre-existing `Cluster_Label_*` segment tags shipped with the
+source data are withheld from both supervised models as leakage.
 
 ### Model 1 — Churn Prediction (XGBoost Classifier)
 
 | Metric | Value | Notes |
 | --- | --- | --- |
-| **ROC-AUC** | **0.9440** | Hold-out; the figure to quote |
-| **F1-score (churn class)** | **0.6977** | Minority-class balance |
-| Precision (churn) | 0.735 | Of flagged accounts, 73.5% do churn |
+| **ROC-AUC** | **0.9455** | Hold-out; the figure to quote |
+| **F1-score (churn class)** | **0.6881** | Minority-class balance |
+| Precision (churn) | 0.714 | Of flagged accounts, 71.4% do churn |
 | Recall (churn) | 0.664 | Catches 66.4% of actual churners |
-| Accuracy | 0.935 | Overall correctness |
-| GradientBoosting baseline ROC-AUC | 0.9388 | XGBoost selected |
+| Accuracy | 0.932 | Overall correctness |
+| GradientBoosting baseline ROC-AUC | 0.9384 | XGBoost selected |
 
 **Top SHAP churn drivers:** `txn_count` · `Renewal_Risk_Flag_Low` ·
-`txn_mean_payment_delay_days` · `escalated_ticket_ratio` · `Relative_Churn_Risk_Medium`
+`txn_mean_payment_delay_days` · `Relative_Churn_Risk_Medium` · `txn_renewal_count`
 
 ### Model 2 — Revenue Forecasting (GradientBoosting Regressor)
 
 | Metric | Value |
 | --- | --- |
-| **RMSE** | **$1,390.49** |
-| **MAE** | **$684.28** |
-| **R²** | **0.9661** |
-| Adjusted R² | 0.9583 |
-| Cross-validated R² | 0.9565 ± 0.0115 |
-| XGBoost alternative RMSE | $1,394.83 (R² 0.9659) |
+| **RMSE** | **$1,363.28** |
+| **MAE** | **$692.37** |
+| **R²** | **0.9674** |
+| Adjusted R² | 0.9600 |
+| Cross-validated R² | 0.9557 ± 0.0105 |
+| XGBoost alternative RMSE | $1,390.61 (R² 0.9661) |
 
 ### Model 3 — Behavioural Segmentation (KMeans + PCA)
 
@@ -221,10 +222,10 @@ segments remain commercially sharp: a 7.5× churn-rate gap between them.
 | Indicator | Value |
 | --- | --- |
 | Accounts profiled | 5,000 |
-| High-risk accounts | 547 |
-| Medium-risk accounts | 29 |
+| High-risk accounts | 549 |
+| Medium-risk accounts | 27 |
 | Low-risk accounts | 4,424 |
-| **Total forecast revenue at risk** | **$695,094** |
+| **Total forecast revenue at risk** | **$711,300** |
 
 ---
 
@@ -305,14 +306,14 @@ recommendations with owner and timeframe, and renewal + upsell plays.
 
 ## Known Limitations
 
-1. **Potential target leakage — `txn_count`.** The strongest churn driver (mean |SHAP| 2.90,
+1. **Potential target leakage — `txn_count`.** The strongest churn driver (mean |SHAP| 2.89,
    ~2.5× the next feature) is transaction count. Customers who churn stop transacting, so
    this partly encodes the outcome rather than predicting it. A production rebuild should
    ablate it and re-measure honest performance.
 
-2. **Optimistic cross-validated ROC-AUC.** The `cv_roc_auc_mean` of 0.9956 in
+2. **Optimistic cross-validated ROC-AUC.** The `cv_roc_auc_mean` of 0.9954 in
    `model_metrics.json` is computed over SMOTE-balanced folds, so synthetic minority samples
-   leak across fold boundaries. **Quote the hold-out ROC-AUC of 0.9440 instead.** The fix is
+   leak across fold boundaries. **Quote the hold-out ROC-AUC of 0.9455 instead.** The fix is
    to resample inside an `imblearn.pipeline.Pipeline` evaluated per fold.
 
 3. **Silhouette target not met.** 0.3760 versus the 0.60 target. SaaS behavioural features

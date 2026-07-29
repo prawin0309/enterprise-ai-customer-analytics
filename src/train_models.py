@@ -59,8 +59,12 @@ SILHOUETTE_TARGET = 0.60
 CLUSTER_RANGE = range(2, 11)
 
 # ``Cluster_Label`` is a pre-existing segment tag shipped with the source data
-# and encodes churn risk directly, so it is excluded from supervised training.
-LEAKAGE_COLUMNS = [CUSTOMER_KEY, "Cluster_Label"]
+# (values such as "At-Risk SMB") and encodes churn risk directly, so it is
+# excluded from supervised training. One-hot encoding expands it into
+# ``Cluster_Label_*`` dummies, so the exclusion must match on prefix - matching
+# the bare column name silently excludes nothing.
+LEAKAGE_COLUMNS = [CUSTOMER_KEY]
+LEAKAGE_PREFIXES = ("Cluster_Label",)
 
 # Behavioural features used for segmentation (usage, engagement, value, tenure).
 SEGMENTATION_FEATURES = [
@@ -105,6 +109,13 @@ def load_processed_data(path: Path = PROCESSED_FILE) -> pd.DataFrame:
     return df
 
 
+def resolve_excluded_columns(df: pd.DataFrame, extra: list[str]) -> list[str]:
+    """Return every column to withhold from training, expanding leakage prefixes."""
+    excluded = {c for c in LEAKAGE_COLUMNS + extra if c in df.columns}
+    excluded |= {c for c in df.columns if c.startswith(LEAKAGE_PREFIXES)}
+    return sorted(excluded)
+
+
 def build_supervised_matrix(
     df: pd.DataFrame, target: str, drop_columns: list[str]
 ) -> tuple[pd.DataFrame, pd.Series]:
@@ -121,7 +132,8 @@ def build_supervised_matrix(
 def train_churn_classifier(df: pd.DataFrame) -> tuple[XGBClassifier, dict]:
     """Train an XGBoost churn classifier on a SMOTE-balanced training split."""
     logger.info("--- Model 1: churn classification ---")
-    drop_columns = LEAKAGE_COLUMNS + [CHURN_TARGET, REVENUE_TARGET]
+    drop_columns = resolve_excluded_columns(df, [CHURN_TARGET, REVENUE_TARGET])
+    logger.info("Withholding %d columns: %s", len(drop_columns), drop_columns)
     features, target = build_supervised_matrix(df, CHURN_TARGET, drop_columns)
 
     x_train, x_test, y_train, y_test = train_test_split(
@@ -234,7 +246,7 @@ def compute_shap_importance(
 def train_revenue_regressor(df: pd.DataFrame) -> tuple[object, dict]:
     """Train and select the better of XGBoost / GradientBoosting on RMSE."""
     logger.info("--- Model 2: next-quarter revenue forecasting ---")
-    drop_columns = LEAKAGE_COLUMNS + [REVENUE_TARGET, CHURN_TARGET]
+    drop_columns = resolve_excluded_columns(df, [REVENUE_TARGET, CHURN_TARGET])
     features, target = build_supervised_matrix(df, REVENUE_TARGET, drop_columns)
 
     x_train, x_test, y_train, y_test = train_test_split(
@@ -427,18 +439,15 @@ def run_training() -> dict:
     joblib.dump(pca, MODEL_DIR / "segmentation_pca.pkl")
 
     # Feature contracts keep downstream scoring aligned with training.
+    supervised_features = [
+        c
+        for c in df.columns
+        if c not in resolve_excluded_columns(df, [CHURN_TARGET, REVENUE_TARGET])
+    ]
     joblib.dump(
         {
-            "churn_features": [
-                c
-                for c in df.columns
-                if c not in LEAKAGE_COLUMNS + [CHURN_TARGET, REVENUE_TARGET]
-            ],
-            "revenue_features": [
-                c
-                for c in df.columns
-                if c not in LEAKAGE_COLUMNS + [CHURN_TARGET, REVENUE_TARGET]
-            ],
+            "churn_features": supervised_features,
+            "revenue_features": supervised_features,
             "segmentation_features": SEGMENTATION_FEATURES,
             "log_scale_features": LOG_SCALE_FEATURES,
         },

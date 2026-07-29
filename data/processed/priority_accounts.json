@@ -1,5 +1,82 @@
 [
   {
+    "customer_id": 12959,
+    "account_context": {
+      "industry": "Energy",
+      "business_model": "B2B",
+      "country": "United States",
+      "market_tier": "Tier1",
+      "account_tier": "Platinum",
+      "company_size": "Startup (<50)",
+      "plan_type": "Starter",
+      "module": "Marketing",
+      "support_level": "Community",
+      "contract_type": "Annual",
+      "tenure_months": 74
+    },
+    "churn_prediction": {
+      "probability": 0.7532,
+      "risk_level": "High",
+      "renewal_probability_crm": 0.92
+    },
+    "revenue_forecast": {
+      "predicted_next_quarter_usd": 19372.88,
+      "current_acv_usd": 76108,
+      "lifetime_revenue_usd": 431397,
+      "revenue_at_risk_usd": 14591.58
+    },
+    "segmentation": {
+      "cluster_id": 1,
+      "cluster_label": "Loyal High-Value Accounts",
+      "cluster_size": 3599,
+      "cluster_churn_rate": 0.0403,
+      "cluster_mean_monthly_revenue_usd": 2127.22,
+      "cluster_mean_feature_adoption_pct": 73.34
+    },
+    "intelligence_scores": {
+      "risk_score": 89.3,
+      "revenue_potential_score": 91.6,
+      "priority_score": 100.0,
+      "engagement_level": "High",
+      "health_score": 69,
+      "csat_score": 4.8,
+      "nps_score": 15.0,
+      "support_tickets": 3
+    },
+    "top_churn_drivers": [
+      {
+        "feature": "txn_count",
+        "value": 4.0,
+        "shap_value": 4.2314,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "Renewal_Risk_Flag_Low",
+        "value": 1.0,
+        "shap_value": -1.1424,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "txn_mean_payment_delay_days",
+        "value": 0.0,
+        "shap_value": -0.6022,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Relative_Churn_Risk_Low",
+        "value": 1.0,
+        "shap_value": -0.3529,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Industry_ID",
+        "value": 18.0,
+        "shap_value": -0.3414,
+        "direction": "reduces_churn_risk"
+      }
+    ]
+  },
+  {
     "customer_id": 12908,
     "account_context": {
       "industry": "Healthcare",
@@ -15,15 +92,15 @@
       "tenure_months": 59
     },
     "churn_prediction": {
-      "probability": 0.8724,
+      "probability": 0.8936,
       "risk_level": "High",
       "renewal_probability_crm": 0.84
     },
     "revenue_forecast": {
-      "predicted_next_quarter_usd": 15868.45,
+      "predicted_next_quarter_usd": 15926.51,
       "current_acv_usd": 56540,
       "lifetime_revenue_usd": 287628,
-      "revenue_at_risk_usd": 13844.37
+      "revenue_at_risk_usd": 14232.42
     },
     "segmentation": {
       "cluster_id": 1,
@@ -34,8 +111,8 @@
       "cluster_mean_feature_adoption_pct": 73.34
     },
     "intelligence_scores": {
-      "risk_score": 90.3,
-      "revenue_potential_score": 88.3,
+      "risk_score": 90.4,
+      "revenue_potential_score": 88.5,
       "priority_score": 100.0,
       "engagement_level": "High",
       "health_score": 100,
@@ -47,32 +124,32 @@
       {
         "feature": "txn_count",
         "value": 6.0,
-        "shap_value": 2.655,
+        "shap_value": 2.6467,
         "direction": "increases_churn_risk"
       },
       {
         "feature": "Renewal_Risk_Flag_Low",
         "value": 1.0,
-        "shap_value": -1.3728,
+        "shap_value": -1.4028,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "Sector_Healthcare",
         "value": 1.0,
-        "shap_value": -0.578,
+        "shap_value": -0.4945,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "Sessions_Per_User_Day",
         "value": 5.3,
-        "shap_value": -0.5074,
+        "shap_value": -0.4094,
         "direction": "reduces_churn_risk"
       },
       {
-        "feature": "escalated_ticket_ratio",
-        "value": 0.0,
-        "shap_value": -0.3911,
-        "direction": "reduces_churn_risk"
+        "feature": "automation_density",
+        "value": 0.9365,
+        "shap_value": 0.3899,
+        "direction": "increases_churn_risk"
       }
     ]
   },
@@ -92,15 +169,15 @@
       "tenure_months": 3
     },
     "churn_prediction": {
-      "probability": 0.8529,
+      "probability": 0.855,
       "risk_level": "High",
       "renewal_probability_crm": 0.78
     },
     "revenue_forecast": {
-      "predicted_next_quarter_usd": 15536.02,
+      "predicted_next_quarter_usd": 16040.46,
       "current_acv_usd": 54848,
       "lifetime_revenue_usd": 12155,
-      "revenue_at_risk_usd": 13251.07
+      "revenue_at_risk_usd": 13714.97
     },
     "segmentation": {
       "cluster_id": 1,
@@ -111,8 +188,8 @@
       "cluster_mean_feature_adoption_pct": 73.34
     },
     "intelligence_scores": {
-      "risk_score": 90.0,
-      "revenue_potential_score": 88.0,
+      "risk_score": 89.9,
+      "revenue_potential_score": 88.5,
       "priority_score": 100.0,
       "engagement_level": "Moderate",
       "health_score": 77,
@@ -124,109 +201,32 @@
       {
         "feature": "Renewal_Risk_Flag_Low",
         "value": 1.0,
-        "shap_value": -1.3927,
+        "shap_value": -1.6203,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "txn_mean_payment_delay_days",
         "value": 1.0,
-        "shap_value": -0.4816,
-        "direction": "reduces_churn_risk"
-      },
-      {
-        "feature": "Mobile_Users_Pct",
-        "value": 6.6,
-        "shap_value": 0.463,
-        "direction": "increases_churn_risk"
-      },
-      {
-        "feature": "Relative_Churn_Risk_Medium",
-        "value": 1.0,
-        "shap_value": -0.4402,
+        "shap_value": -0.4446,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "escalated_ticket_ratio",
         "value": 0.0,
-        "shap_value": -0.425,
+        "shap_value": -0.4296,
         "direction": "reduces_churn_risk"
-      }
-    ]
-  },
-  {
-    "customer_id": 12959,
-    "account_context": {
-      "industry": "Energy",
-      "business_model": "B2B",
-      "country": "United States",
-      "market_tier": "Tier1",
-      "account_tier": "Platinum",
-      "company_size": "Startup (<50)",
-      "plan_type": "Starter",
-      "module": "Marketing",
-      "support_level": "Community",
-      "contract_type": "Annual",
-      "tenure_months": 74
-    },
-    "churn_prediction": {
-      "probability": 0.6136,
-      "risk_level": "High",
-      "renewal_probability_crm": 0.92
-    },
-    "revenue_forecast": {
-      "predicted_next_quarter_usd": 19762.01,
-      "current_acv_usd": 76108,
-      "lifetime_revenue_usd": 431397,
-      "revenue_at_risk_usd": 12125.58
-    },
-    "segmentation": {
-      "cluster_id": 1,
-      "cluster_label": "Loyal High-Value Accounts",
-      "cluster_size": 3599,
-      "cluster_churn_rate": 0.0403,
-      "cluster_mean_monthly_revenue_usd": 2127.22,
-      "cluster_mean_feature_adoption_pct": 73.34
-    },
-    "intelligence_scores": {
-      "risk_score": 89.1,
-      "revenue_potential_score": 92.2,
-      "priority_score": 100.0,
-      "engagement_level": "High",
-      "health_score": 69,
-      "csat_score": 4.8,
-      "nps_score": 15.0,
-      "support_tickets": 3
-    },
-    "top_churn_drivers": [
+      },
       {
-        "feature": "txn_count",
-        "value": 4.0,
-        "shap_value": 4.1158,
+        "feature": "Relative_Churn_Risk_Medium",
+        "value": 1.0,
+        "shap_value": -0.4138,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Mobile_Users_Pct",
+        "value": 6.6,
+        "shap_value": 0.3608,
         "direction": "increases_churn_risk"
-      },
-      {
-        "feature": "Renewal_Risk_Flag_Low",
-        "value": 1.0,
-        "shap_value": -1.0656,
-        "direction": "reduces_churn_risk"
-      },
-      {
-        "feature": "txn_mean_payment_delay_days",
-        "value": 0.0,
-        "shap_value": -0.5918,
-        "direction": "reduces_churn_risk"
-      },
-      {
-        "feature": "Sector_Energy",
-        "value": 1.0,
-        "shap_value": -0.4242,
-        "direction": "reduces_churn_risk"
-      },
-      {
-        "feature": "Relative_Churn_Risk_Low",
-        "value": 1.0,
-        "shap_value": -0.3539,
-        "direction": "reduces_churn_risk"
       }
     ]
   },
@@ -246,15 +246,15 @@
       "tenure_months": 7
     },
     "churn_prediction": {
-      "probability": 0.9404,
+      "probability": 0.9443,
       "risk_level": "High",
       "renewal_probability_crm": 0.68
     },
     "revenue_forecast": {
-      "predicted_next_quarter_usd": 11812.73,
+      "predicted_next_quarter_usd": 12224.07,
       "current_acv_usd": 40313,
       "lifetime_revenue_usd": 22958,
-      "revenue_at_risk_usd": 11108.92
+      "revenue_at_risk_usd": 11543.36
     },
     "segmentation": {
       "cluster_id": 1,
@@ -265,8 +265,8 @@
       "cluster_mean_feature_adoption_pct": 73.34
     },
     "intelligence_scores": {
-      "risk_score": 92.2,
-      "revenue_potential_score": 82.9,
+      "risk_score": 92.3,
+      "revenue_potential_score": 83.2,
       "priority_score": 99.9,
       "engagement_level": "High",
       "health_score": 75,
@@ -278,60 +278,60 @@
       {
         "feature": "txn_count",
         "value": 5.0,
-        "shap_value": 2.9962,
+        "shap_value": 2.9163,
         "direction": "increases_churn_risk"
       },
       {
         "feature": "Renewal_Risk_Flag_Low",
         "value": 1.0,
-        "shap_value": -1.117,
+        "shap_value": -1.1193,
         "direction": "reduces_churn_risk"
-      },
-      {
-        "feature": "txn_mean_payment_delay_days",
-        "value": 15.0,
-        "shap_value": 0.3898,
-        "direction": "increases_churn_risk"
-      },
-      {
-        "feature": "txn_renewal_count",
-        "value": 1.0,
-        "shap_value": 0.3521,
-        "direction": "increases_churn_risk"
       },
       {
         "feature": "Relative_Churn_Risk_Low",
         "value": 1.0,
-        "shap_value": -0.3442,
+        "shap_value": -0.3928,
         "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "txn_renewal_count",
+        "value": 1.0,
+        "shap_value": 0.3467,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "txn_mean_payment_delay_days",
+        "value": 15.0,
+        "shap_value": 0.3341,
+        "direction": "increases_churn_risk"
       }
     ]
   },
   {
-    "customer_id": 10880,
+    "customer_id": 13396,
     "account_context": {
-      "industry": "Telecommunications",
+      "industry": "Education",
       "business_model": "B2B",
-      "country": "United Kingdom",
+      "country": "Austria",
       "market_tier": "Tier1",
-      "account_tier": "Gold",
-      "company_size": "SMB (50-250)",
-      "plan_type": "Enterprise",
-      "module": "Core",
-      "support_level": "Premium",
-      "contract_type": "Annual",
-      "tenure_months": 30
+      "account_tier": "Silver",
+      "company_size": NaN,
+      "plan_type": "Starter",
+      "module": "Service",
+      "support_level": "Community",
+      "contract_type": "Multi-Year",
+      "tenure_months": 52
     },
     "churn_prediction": {
-      "probability": 0.9654,
+      "probability": 0.9465,
       "risk_level": "High",
-      "renewal_probability_crm": 0.64
+      "renewal_probability_crm": 0.72
     },
     "revenue_forecast": {
-      "predicted_next_quarter_usd": 10764.58,
-      "current_acv_usd": 42033,
-      "lifetime_revenue_usd": 109830,
-      "revenue_at_risk_usd": 10392.0
+      "predicted_next_quarter_usd": 10650.96,
+      "current_acv_usd": 40253,
+      "lifetime_revenue_usd": 160979,
+      "revenue_at_risk_usd": 10081.01
     },
     "segmentation": {
       "cluster_id": 1,
@@ -342,45 +342,45 @@
       "cluster_mean_feature_adoption_pct": 73.34
     },
     "intelligence_scores": {
-      "risk_score": 93.7,
+      "risk_score": 92.5,
       "revenue_potential_score": 81.2,
       "priority_score": 99.9,
-      "engagement_level": "Low",
-      "health_score": 72,
-      "csat_score": 3.9,
-      "nps_score": 44.0,
-      "support_tickets": 10
+      "engagement_level": "Moderate",
+      "health_score": 67,
+      "csat_score": 4.2,
+      "nps_score": 9.0,
+      "support_tickets": 12
     },
     "top_churn_drivers": [
       {
         "feature": "txn_count",
-        "value": 4.0,
-        "shap_value": 4.1352,
+        "value": 7.0,
+        "shap_value": 1.5794,
         "direction": "increases_churn_risk"
       },
       {
         "feature": "Renewal_Risk_Flag_Low",
-        "value": 0.0,
-        "shap_value": 1.2222,
-        "direction": "increases_churn_risk"
-      },
-      {
-        "feature": "usage_mean_license_utilization_pct",
-        "value": 100.0,
-        "shap_value": -0.9013,
-        "direction": "reduces_churn_risk"
-      },
-      {
-        "feature": "Renewal_Risk_Flag_Medium",
         "value": 1.0,
-        "shap_value": -0.4831,
+        "shap_value": -1.3558,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "Relative_Churn_Risk_Medium",
         "value": 1.0,
-        "shap_value": -0.3959,
+        "shap_value": -0.3593,
         "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "eng_mean_resolution_days",
+        "value": 7.0,
+        "shap_value": 0.335,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "txn_renewal_count",
+        "value": 1.0,
+        "shap_value": 0.3189,
+        "direction": "increases_churn_risk"
       }
     ]
   }
