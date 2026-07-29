@@ -1,70 +1,88 @@
 {
   "churn_classification": {
-    "roc_auc": 0.9454859275074577,
-    "f1_score": 0.6880733944954128,
-    "cv_roc_auc_mean": 0.9953869581141271,
-    "n_features": 184,
-    "baseline_gb_roc_auc": 0.9384322215681775,
+    "roc_auc": 0.9022757430335924,
+    "f1_score": 0.6020408163265306,
+    "precision": 0.7108433734939759,
+    "recall": 0.5221238938053098,
+    "cv_roc_auc_mean": 0.9032002762418545,
+    "cv_roc_auc_std": 0.01524963920482052,
+    "cv_method": "SMOTE inside imblearn Pipeline, refitted per fold",
+    "n_features": 180,
+    "excluded_temporal_artifacts": [
+      "txn_count",
+      "txn_renewal_count",
+      "active_quarters",
+      "usage_months_observed"
+    ],
+    "baseline_gb_roc_auc": 0.8688629266394629,
+    "leakage_ablation": {
+      "description": "Contaminated variant retaining record-count features that fall because a churned customer stops generating rows.",
+      "n_features": 184,
+      "roc_auc": 0.9454859275074577,
+      "f1_score": 0.6880733944954128,
+      "recall": 0.6637168141592921,
+      "cv_roc_auc_mean": 0.9527925501728319
+    },
     "top_shap_drivers": [
       {
-        "feature": "txn_count",
-        "mean_abs_shap": 2.8932340145111084
-      },
-      {
         "feature": "Renewal_Risk_Flag_Low",
-        "mean_abs_shap": 1.2251851558685303
+        "mean_abs_shap": 1.3744081258773804
       },
       {
-        "feature": "txn_mean_payment_delay_days",
-        "mean_abs_shap": 0.4321715533733368
+        "feature": "txn_total_revenue_usd",
+        "mean_abs_shap": 0.7043882608413696
       },
       {
-        "feature": "Relative_Churn_Risk_Medium",
-        "mean_abs_shap": 0.2398303896188736
+        "feature": "txn_total_billed_usd",
+        "mean_abs_shap": 0.6566274762153625
       },
       {
-        "feature": "txn_renewal_count",
-        "mean_abs_shap": 0.22259771823883057
-      },
-      {
-        "feature": "usage_mean_license_utilization_pct",
-        "mean_abs_shap": 0.21869073808193207
-      },
-      {
-        "feature": "active_quarters",
-        "mean_abs_shap": 0.20542819797992706
-      },
-      {
-        "feature": "Relative_Churn_Risk_Low",
-        "mean_abs_shap": 0.20353390276432037
+        "feature": "txn_mean_revenue_usd",
+        "mean_abs_shap": 0.5814854502677917
       },
       {
         "feature": "escalated_ticket_ratio",
-        "mean_abs_shap": 0.20347213745117188
+        "mean_abs_shap": 0.35967519879341125
       },
       {
-        "feature": "Sessions_Per_User_Day",
-        "mean_abs_shap": 0.18360204994678497
+        "feature": "txn_mean_payment_delay_days",
+        "mean_abs_shap": 0.3192012906074524
       },
       {
-        "feature": "tickets_per_tenure_month",
-        "mean_abs_shap": 0.17309245467185974
+        "feature": "Relative_Churn_Risk_Medium",
+        "mean_abs_shap": 0.30986377596855164
       },
       {
-        "feature": "Renewal_Risk_Flag_Medium",
-        "mean_abs_shap": 0.17187932133674622
+        "feature": "Relative_Churn_Risk_Low",
+        "mean_abs_shap": 0.2769378125667572
+      },
+      {
+        "feature": "txn_failed_payment_rate",
+        "mean_abs_shap": 0.26496759057044983
+      },
+      {
+        "feature": "usage_mean_license_utilization_pct",
+        "mean_abs_shap": 0.2586364448070526
+      },
+      {
+        "feature": "txn_addon_revenue_usd",
+        "mean_abs_shap": 0.25617074966430664
       },
       {
         "feature": "Business_Model_B2C",
-        "mean_abs_shap": 0.1596488505601883
+        "mean_abs_shap": 0.23361125588417053
       },
       {
-        "feature": "quarterly_revenue_last",
-        "mean_abs_shap": 0.1428057998418808
+        "feature": "Renewal_Risk_Flag_Medium",
+        "mean_abs_shap": 0.20644553005695343
       },
       {
-        "feature": "NPS_Score",
-        "mean_abs_shap": 0.13286204636096954
+        "feature": "Escalated_Tickets",
+        "mean_abs_shap": 0.18979018926620483
+      },
+      {
+        "feature": "txn_auto_renewal_rate",
+        "mean_abs_shap": 0.16843858361244202
       }
     ]
   },
@@ -119,7 +137,7 @@
         "silhouette": 0.37596570048166633,
         "davies_bouldin": 1.188558071901896,
         "calinski_harabasz": 2723.3710207020417,
-        "inertia": 29355.40631108849
+        "inertia": 29355.40631108848
       },
       {
         "k": 3,
@@ -147,7 +165,7 @@
         "silhouette": 0.2680294717826598,
         "davies_bouldin": 1.349983677994228,
         "calinski_harabasz": 2002.6390850876662,
-        "inertia": 15091.547267997392
+        "inertia": 15091.547267997394
       },
       {
         "k": 7,
@@ -168,7 +186,7 @@
         "silhouette": 0.2538698101553815,
         "davies_bouldin": 1.3011810293269752,
         "calinski_harabasz": 1726.6304025105442,
-        "inertia": 12037.07862886825
+        "inertia": 12037.078628868248
       },
       {
         "k": 10,

@@ -171,22 +171,48 @@ python -m jupyter lab notebooks\EDA_and_Modeling.ipynb
 ## Model Performance
 
 All figures measured on a stratified 20% hold-out set (`random_state=42`), 5,000 customers,
-184 modelling features. The pre-existing `Cluster_Label_*` segment tags shipped with the
-source data are withheld from both supervised models as leakage.
+180 modelling features. Two families of columns are withheld from supervised training as
+leakage: the pre-baked `Cluster_Label_*` segment tags shipped with the source data, and four
+record-count features that encode the churn outcome (see
+[Target-leakage handling](#target-leakage-handling)).
 
 ### Model 1 — Churn Prediction (XGBoost Classifier)
 
 | Metric | Value | Notes |
 | --- | --- | --- |
-| **ROC-AUC** | **0.9455** | Hold-out; the figure to quote |
-| **F1-score (churn class)** | **0.6881** | Minority-class balance |
-| Precision (churn) | 0.714 | Of flagged accounts, 71.4% do churn |
-| Recall (churn) | 0.664 | Catches 66.4% of actual churners |
-| Accuracy | 0.932 | Overall correctness |
-| GradientBoosting baseline ROC-AUC | 0.9384 | XGBoost selected |
+| **ROC-AUC** | **0.9023** | Hold-out; the figure to quote |
+| **F1-score (churn class)** | **0.6020** | Minority-class balance |
+| Precision (churn) | 0.711 | Of flagged accounts, 71.1% do churn |
+| Recall (churn) | 0.522 | Catches 52.2% of actual churners |
+| Accuracy | 0.922 | Overall correctness |
+| **Cross-validated ROC-AUC** | **0.9032 ± 0.0152** | SMOTE refitted inside each fold |
+| GradientBoosting baseline ROC-AUC | 0.8689 | XGBoost selected |
 
-**Top SHAP churn drivers:** `txn_count` · `Renewal_Risk_Flag_Low` ·
-`txn_mean_payment_delay_days` · `Relative_Churn_Risk_Medium` · `txn_renewal_count`
+**Top SHAP churn drivers:** `Renewal_Risk_Flag_Low` · `txn_total_revenue_usd` ·
+`txn_total_billed_usd` · `txn_mean_revenue_usd` · `escalated_ticket_ratio`
+
+#### Target-leakage handling
+
+Four record-count features fall simply because a churned customer **stops generating rows**,
+so their value encodes the outcome rather than predicting it. All four correlate *negatively*
+with churn. They are withheld from the shipped model:
+
+`txn_count` · `txn_renewal_count` · `active_quarters` · `usage_months_observed`
+
+Engagement counts (`eng_event_count`, `eng_distinct_event_types`) are deliberately **kept** —
+they correlate *positively* with churn (+0.27), because distressed customers raise *more*
+tickets. That is genuine leading signal, not a temporal artefact.
+
+The cost of this exclusion was measured, not assumed (`leakage_ablation` in
+`reports/model_metrics.json`):
+
+| Variant | Features | ROC-AUC | F1 | Recall |
+| --- | --- | --- | --- | --- |
+| **Shipped model (leak-free)** | 180 | **0.9023** | **0.6020** | **0.5221** |
+| Contaminated variant (ablation only) | 184 | 0.9455 | 0.6881 | 0.6637 |
+
+The contaminated variant scores ~0.043 higher ROC-AUC partly by reading the outcome it is
+meant to forecast. **Quote the leak-free numbers.**
 
 ### Model 2 — Revenue Forecasting (GradientBoosting Regressor)
 
@@ -222,10 +248,10 @@ segments remain commercially sharp: a 7.5× churn-rate gap between them.
 | Indicator | Value |
 | --- | --- |
 | Accounts profiled | 5,000 |
-| High-risk accounts | 549 |
-| Medium-risk accounts | 27 |
-| Low-risk accounts | 4,424 |
-| **Total forecast revenue at risk** | **$711,300** |
+| High-risk accounts | 516 |
+| Medium-risk accounts | 61 |
+| Low-risk accounts | 4,423 |
+| **Total forecast revenue at risk** | **$697,827** |
 
 ---
 
@@ -252,9 +278,14 @@ segments remain commercially sharp: a 7.5× churn-rate gap between them.
 
 ### 2. Training (`src/train_models.py`)
 
-Compares two algorithms per supervised task, cross-validates, and sweeps k = 2..10 for
-clustering with silhouette / Davies-Bouldin / Calinski-Harabasz validation. Computes SHAP
-values via `TreeExplainer`.
+Compares two algorithms per supervised task and sweeps k = 2..10 for clustering with
+silhouette / Davies-Bouldin / Calinski-Harabasz validation. Computes SHAP values via
+`TreeExplainer`.
+
+Cross-validation uses an `imblearn.pipeline.Pipeline` so **SMOTE is refitted inside every
+fold** on that fold's training portion only. Cross-validating a model already fitted on
+pre-balanced data is optimistic — synthetic rows derived from a validation record leak into
+the training folds. That earlier approach reported 0.9954 against the honest 0.9032.
 
 ### 3. Fusion (`src/fusion_layer.py`)
 
@@ -306,15 +337,15 @@ recommendations with owner and timeframe, and renewal + upsell plays.
 
 ## Known Limitations
 
-1. **Potential target leakage — `txn_count`.** The strongest churn driver (mean |SHAP| 2.89,
-   ~2.5× the next feature) is transaction count. Customers who churn stop transacting, so
-   this partly encodes the outcome rather than predicting it. A production rebuild should
-   ablate it and re-measure honest performance.
+1. **Residual leakage risk.** The four clearest temporal artefacts are withheld and the cost
+   measured, but other aggregates — `txn_total_revenue_usd`, `Lifetime_Revenue_USD` — also
+   scale with how long an account survived. A production rebuild should compute every feature
+   from a fixed observation window that closes before the prediction date.
 
-2. **Optimistic cross-validated ROC-AUC.** The `cv_roc_auc_mean` of 0.9954 in
-   `model_metrics.json` is computed over SMOTE-balanced folds, so synthetic minority samples
-   leak across fold boundaries. **Quote the hold-out ROC-AUC of 0.9455 instead.** The fix is
-   to resample inside an `imblearn.pipeline.Pipeline` evaluated per fold.
+2. **Recall ceiling.** The leak-free model catches 52.2% of churners at 71.1% precision.
+   Raising recall means lowering the decision threshold and accepting more false positives;
+   the right operating point depends on the cost of a retention outreach versus a lost
+   account. No threshold tuning was performed — the default 0.5 cut-off is used.
 
 3. **Silhouette target not met.** 0.3760 versus the 0.60 target. SaaS behavioural features
    are continuous and overlapping, so accounts form a gradient rather than separable spheres;

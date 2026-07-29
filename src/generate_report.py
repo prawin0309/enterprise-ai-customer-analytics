@@ -260,7 +260,8 @@ def build_story(styles: dict, data: dict) -> list:
         Paragraph(
             f"The churn classifier achieves a hold-out ROC-AUC of "
             f"<b>{churn['roc_auc']:.4f}</b> and an F1 of <b>{churn['f1_score']:.4f}</b> "
-            f"on the minority churn class. The revenue model explains "
+            f"on the minority churn class, after withholding four record-count "
+            f"features identified as target leakage. The revenue model explains "
             f"<b>{revenue['r2']:.1%}</b> of next-quarter revenue variance with an RMSE "
             f"of <b>${revenue['rmse']:,.0f}</b>. Segmentation resolves the portfolio "
             f"into <b>{segmentation['selected_k']}</b> behavioural clusters whose churn "
@@ -382,6 +383,22 @@ def build_story(styles: dict, data: dict) -> list:
                     "Balanced precision and recall on the minority class",
                 ],
                 [
+                    "Precision (churn class)",
+                    f"{churn['precision']:.4f}",
+                    "Share of flagged accounts that genuinely churn",
+                ],
+                [
+                    "Recall (churn class)",
+                    f"{churn['recall']:.4f}",
+                    "Share of actual churners the model catches",
+                ],
+                [
+                    "Cross-validated ROC-AUC",
+                    f"{churn['cv_roc_auc_mean']:.4f} ± "
+                    f"{churn['cv_roc_auc_std']:.4f}",
+                    "SMOTE refitted inside each fold - no resampling leak",
+                ],
+                [
                     "Baseline GradientBoosting ROC-AUC",
                     f"{churn['baseline_gb_roc_auc']:.4f}",
                     "XGBoost selected as the stronger model",
@@ -389,22 +406,76 @@ def build_story(styles: dict, data: dict) -> list:
                 [
                     "Features used",
                     f"{churn['n_features']}",
-                    "Post-encoding modelling features",
+                    "After withholding leakage-prone columns",
                 ],
             ],
             styles,
-            [4.6 * cm, 3.0 * cm, 9.4 * cm],
+            [4.6 * cm, 3.4 * cm, 9.0 * cm],
         )
     )
     story.append(
         Paragraph(
-            "Note: the cross-validated ROC-AUC recorded in model_metrics.json is "
-            "computed over SMOTE-balanced folds and is optimistic, because synthetic "
-            "minority samples leak across fold boundaries. The hold-out ROC-AUC above "
-            "is the figure that should be quoted.",
+            "The cross-validated figure is produced by an imbalanced-learn pipeline "
+            "in which SMOTE is refitted on the training portion of every fold. "
+            "Cross-validating a model already fitted on pre-balanced data would be "
+            "optimistic, because synthetic rows derived from a validation record can "
+            "reach the training folds; that earlier approach reported 0.9954 against "
+            f"the honest {churn['cv_roc_auc_mean']:.4f}.",
             styles["caption"],
         )
     )
+
+    ablation = churn.get("leakage_ablation")
+    if ablation:
+        story.append(
+            Paragraph("4.1.1 Target-leakage ablation", styles["subheading"])
+        )
+        story.append(
+            Paragraph(
+                "Four record-count features (transaction count, renewal count, "
+                "active quarters, months of usage observed) fall simply because a "
+                "churned customer stops generating rows, so their value encodes the "
+                "outcome rather than predicting it. They are withheld from the "
+                "shipped model. Engagement counts are deliberately retained: they "
+                "correlate <i>positively</i> with churn (distressed customers raise "
+                "more tickets), which is genuine leading signal. The table below "
+                "states the measured cost of that decision.",
+                styles["body"],
+            )
+        )
+        story.append(
+            make_table(
+                [
+                    ["Variant", "Features", "ROC-AUC", "F1", "Recall"],
+                    [
+                        "Shipped model (leak-free)",
+                        f"{churn['n_features']}",
+                        f"{churn['roc_auc']:.4f}",
+                        f"{churn['f1_score']:.4f}",
+                        f"{churn['recall']:.4f}",
+                    ],
+                    [
+                        "Contaminated variant (ablation only)",
+                        f"{ablation['n_features']}",
+                        f"{ablation['roc_auc']:.4f}",
+                        f"{ablation['f1_score']:.4f}",
+                        f"{ablation['recall']:.4f}",
+                    ],
+                ],
+                styles,
+                [6.4 * cm, 2.4 * cm, 2.8 * cm, 2.6 * cm, 2.8 * cm],
+            )
+        )
+        story.append(
+            Paragraph(
+                f"Excluding the artefacts costs "
+                f"{ablation['roc_auc'] - churn['roc_auc']:.4f} ROC-AUC and "
+                f"{ablation['recall'] - churn['recall']:.4f} recall. The lower "
+                "figure is the honest one: the contaminated variant scores well "
+                "partly by reading the outcome it is meant to forecast.",
+                styles["caption"],
+            )
+        )
 
     story.append(Paragraph("4.2 Explainable AI — SHAP churn drivers", styles["subheading"]))
     shap_rows = [["Rank", "Feature", "Mean |SHAP|", "Business Meaning"]]
@@ -627,13 +698,16 @@ def build_story(styles: dict, data: dict) -> list:
     # --- 8. Limitations ---------------------------------------------------
     story.append(Paragraph("8. Limitations and Future Work", styles["heading"]))
     for text in [
-        "<b>Potential target leakage.</b> Transaction count is the dominant churn "
-        "driver, but low transaction volume is partly a consequence of churning "
-        "rather than a leading indicator. A production rebuild should ablate it and "
-        "re-measure.",
-        "<b>Optimistic cross-validation.</b> Cross-validation was run on SMOTE-balanced "
-        "data, so synthetic samples leak across folds. Resampling should be moved "
-        "inside a pipeline evaluated per fold.",
+        "<b>Residual leakage risk.</b> The four clearest temporal artefacts are now "
+        "withheld and the cost measured (section 4.1.1), but other aggregates such as "
+        "lifetime revenue also scale with how long an account survived. A production "
+        "rebuild should compute every feature from a fixed observation window that "
+        "closes before the prediction date.",
+        "<b>Recall ceiling.</b> The leak-free model catches "
+        f"{churn['recall']:.1%} of churners at "
+        f"{churn['precision']:.1%} precision. Raising recall means lowering the "
+        "decision threshold and accepting more false positives; the right operating "
+        "point depends on the cost of a retention outreach versus a lost account.",
         "<b>Segmentation separation.</b> Silhouette of 0.376 falls short of the 0.60 "
         "target; density-based or model-based clustering may suit gradient-shaped "
         "behavioural data better.",
