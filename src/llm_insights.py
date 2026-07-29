@@ -33,13 +33,24 @@ API_KEY_VARIABLES = ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY")
 # ``gemini-pro`` was retired from the v1beta API. Model listings also advertise
 # models the key cannot actually call, so each candidate is probed with a live
 # request and the first one that answers is used.
+#
+# Free-tier quota is tracked per model, so the list deliberately mixes tiers:
+# when the flagship models are exhausted, the lite variants normally still have
+# headroom and keep the pipeline running.
 MODEL_CANDIDATES = (
-    "gemini-3.5-flash",
+    "gemini-3.6-flash",
     "gemini-flash-latest",
+    "gemini-3-flash-preview",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-lite-latest",
     "gemini-2.5-pro",
     "gemini-2.0-flash",
-    "gemini-pro-latest",
+    "gemma-4-31b-it",
 )
+
+# Errors that mean "this model is unusable right now, try the next one".
+QUOTA_ERROR_NAMES = ("ResourceExhausted", "NotFound", "PermissionDenied")
 
 INSIGHT_COUNT = 5
 # Current Gemini models spend part of the output budget on internal reasoning
@@ -126,32 +137,70 @@ def resolve_api_key() -> str:
     )
 
 
-def resolve_model(api_key: str) -> genai.GenerativeModel:
-    """Configure the client and return the first candidate that answers a probe."""
+class ModelPool:
+    """Serve generations from the first usable model, failing over on quota errors.
+
+    Free-tier quota is per model and can run out mid-job, so the pool advances to
+    the next candidate rather than aborting a partially generated report.
+    """
+
+    def __init__(self, candidates: tuple[str, ...]) -> None:
+        self._candidates = list(candidates)
+        self._index = 0
+        self._model: genai.GenerativeModel | None = None
+        self.failures: dict[str, str] = {}
+
+    @property
+    def model_name(self) -> str:
+        """Name of the model currently serving requests."""
+        return self._candidates[self._index]
+
+    def _build(self, name: str) -> genai.GenerativeModel:
+        return genai.GenerativeModel(
+            model_name=name,
+            system_instruction=SYSTEM_INSTRUCTION,
+            generation_config=GENERATION_CONFIG,
+        )
+
+    def _advance(self) -> bool:
+        """Move to the next candidate. Returns False when none are left."""
+        self._index += 1
+        self._model = None
+        return self._index < len(self._candidates)
+
+    def generate(self, prompt: str):
+        """Generate a response, failing over while candidates remain."""
+        while self._index < len(self._candidates):
+            name = self._candidates[self._index]
+            if self._model is None:
+                self._model = self._build(name)
+            try:
+                return self._model.generate_content(prompt)
+            except Exception as error:  # noqa: BLE001 - drives model failover
+                error_name = type(error).__name__
+                self.failures[name] = error_name
+                if error_name not in QUOTA_ERROR_NAMES:
+                    raise
+                logger.warning("Model %s unusable (%s); failing over", name, error_name)
+                if not self._advance():
+                    break
+        raise RuntimeError(
+            "Every candidate model is unavailable or out of quota. "
+            f"Failures: {self.failures}"
+        )
+
+
+def resolve_model_pool(api_key: str) -> ModelPool:
+    """Configure the client and return a pool primed on a working model."""
     genai.configure(api_key=api_key)
 
     override = os.environ.get("GEMINI_MODEL")
     candidates = (override,) + MODEL_CANDIDATES if override else MODEL_CANDIDATES
 
-    failures: dict[str, str] = {}
-    for name in candidates:
-        model = genai.GenerativeModel(
-            model_name=name,
-            system_instruction=SYSTEM_INSTRUCTION,
-            generation_config=GENERATION_CONFIG,
-        )
-        try:
-            model.generate_content("Reply with the single word: ready")
-        except Exception as error:  # noqa: BLE001 - probe failures select the next model
-            failures[name] = type(error).__name__
-            logger.warning("Model %s unavailable (%s)", name, type(error).__name__)
-            continue
-        logger.info("Selected model: %s", name)
-        return model
-
-    raise RuntimeError(
-        f"No candidate model could be called with this key. Failures: {failures}"
-    )
+    pool = ModelPool(candidates)
+    pool.generate("Reply with the single word: ready")
+    logger.info("Selected model: %s", pool.model_name)
+    return pool
 
 
 # --------------------------------------------------------------------------- #
@@ -180,10 +229,10 @@ def load_profiles(count: int = INSIGHT_COUNT) -> list[dict]:
 # --------------------------------------------------------------------------- #
 
 
-def generate_insight(model: genai.GenerativeModel, profile: dict) -> str:
+def generate_insight(pool: ModelPool, profile: dict) -> str:
     """Generate one executive briefing for a single customer profile."""
     prompt = PROMPT_TEMPLATE.format(profile_json=json.dumps(profile, indent=2))
-    response = model.generate_content(prompt)
+    response = pool.generate(prompt)
 
     # A MAX_TOKENS finish reason means the briefing was cut off mid-sentence.
     # The enum renders as an int, so compare by name rather than by str().
@@ -266,7 +315,7 @@ def run_insight_generation() -> Path:
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     api_key = resolve_api_key()
-    model = resolve_model(api_key)
+    pool = resolve_model_pool(api_key)
     profiles = load_profiles()
 
     insights: list[str] = []
@@ -280,9 +329,9 @@ def run_insight_generation() -> Path:
             profile["churn_prediction"]["probability"] * 100,
             profile["revenue_forecast"]["revenue_at_risk_usd"],
         )
-        insights.append(generate_insight(model, profile))
+        insights.append(generate_insight(pool, profile))
 
-    report = render_report(profiles, insights, model.model_name)
+    report = render_report(profiles, insights, pool.model_name)
     OUTPUT_FILE.write_text(report, encoding="utf-8")
     logger.info("Wrote %d briefings to %s", len(insights), OUTPUT_FILE)
     return OUTPUT_FILE
