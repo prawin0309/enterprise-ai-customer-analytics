@@ -1,0 +1,182 @@
+{
+  "churn_classification": {
+    "roc_auc": 0.9440093384282308,
+    "f1_score": 0.6976744186046512,
+    "cv_roc_auc_mean": 0.995585695743423,
+    "n_features": 187,
+    "baseline_gb_roc_auc": 0.9388412766509363,
+    "top_shap_drivers": [
+      {
+        "feature": "txn_count",
+        "mean_abs_shap": 2.903353452682495
+      },
+      {
+        "feature": "Renewal_Risk_Flag_Low",
+        "mean_abs_shap": 1.1862293481826782
+      },
+      {
+        "feature": "txn_mean_payment_delay_days",
+        "mean_abs_shap": 0.46198317408561707
+      },
+      {
+        "feature": "escalated_ticket_ratio",
+        "mean_abs_shap": 0.24550768733024597
+      },
+      {
+        "feature": "Relative_Churn_Risk_Medium",
+        "mean_abs_shap": 0.24105903506278992
+      },
+      {
+        "feature": "txn_renewal_count",
+        "mean_abs_shap": 0.21054162085056305
+      },
+      {
+        "feature": "usage_mean_license_utilization_pct",
+        "mean_abs_shap": 0.20783662796020508
+      },
+      {
+        "feature": "Relative_Churn_Risk_Low",
+        "mean_abs_shap": 0.1973809003829956
+      },
+      {
+        "feature": "Renewal_Risk_Flag_Medium",
+        "mean_abs_shap": 0.18843932449817657
+      },
+      {
+        "feature": "tickets_per_tenure_month",
+        "mean_abs_shap": 0.1784120500087738
+      },
+      {
+        "feature": "Sessions_Per_User_Day",
+        "mean_abs_shap": 0.17472857236862183
+      },
+      {
+        "feature": "Business_Model_B2C",
+        "mean_abs_shap": 0.172662153840065
+      },
+      {
+        "feature": "active_quarters",
+        "mean_abs_shap": 0.16077838838100433
+      },
+      {
+        "feature": "quarterly_revenue_last",
+        "mean_abs_shap": 0.14844460785388947
+      },
+      {
+        "feature": "Legal_Entity_Type",
+        "mean_abs_shap": 0.12372667342424393
+      }
+    ]
+  },
+  "revenue_regression": {
+    "selected_model": "gradient_boosting",
+    "rmse": 1390.4914828054505,
+    "mae": 684.2756398302744,
+    "r2": 0.966080476746727,
+    "adjusted_r2": 0.958268960923621,
+    "cv_r2_mean": 0.9565379123938602,
+    "cv_r2_std": 0.011543400589258845,
+    "all_candidates": {
+      "xgboost": {
+        "rmse": 1394.828215229388,
+        "mae": 645.5746459960938,
+        "r2": 0.9658685922622681
+      },
+      "gradient_boosting": {
+        "rmse": 1390.4914828054505,
+        "mae": 684.2756398302744,
+        "r2": 0.966080476746727
+      }
+    }
+  },
+  "segmentation": {
+    "selected_k": 2,
+    "silhouette": 0.37596570048166633,
+    "davies_bouldin": 1.188558071901896,
+    "calinski_harabasz": 2723.3710207020417,
+    "silhouette_target": 0.6,
+    "silhouette_target_met": false,
+    "cluster_sizes": {
+      "0": 1401,
+      "1": 3599
+    },
+    "pca_components": 6,
+    "features": [
+      "usage_mean_mau",
+      "usage_mean_feature_adoption_pct",
+      "usage_intensity_score",
+      "usage_mean_license_utilization_pct",
+      "engagement_quality_score",
+      "events_per_tenure_month",
+      "support_dependency_score",
+      "avg_monthly_revenue_usd",
+      "Tenure_Months",
+      "Health_Score"
+    ],
+    "sweep": [
+      {
+        "k": 2,
+        "silhouette": 0.37596570048166633,
+        "davies_bouldin": 1.188558071901896,
+        "calinski_harabasz": 2723.3710207020417,
+        "inertia": 29355.40631108848
+      },
+      {
+        "k": 3,
+        "silhouette": 0.2653513208312659,
+        "davies_bouldin": 1.363758950705855,
+        "calinski_harabasz": 2360.6056010754687,
+        "inertia": 23318.888708615534
+      },
+      {
+        "k": 4,
+        "silhouette": 0.2885470614914292,
+        "davies_bouldin": 1.200046778258996,
+        "calinski_harabasz": 2333.4565213242404,
+        "inertia": 18886.755653563585
+      },
+      {
+        "k": 5,
+        "silhouette": 0.27150546907993284,
+        "davies_bouldin": 1.2535471216255964,
+        "calinski_harabasz": 2157.6109143084923,
+        "inertia": 16625.335171787912
+      },
+      {
+        "k": 6,
+        "silhouette": 0.2680294717826598,
+        "davies_bouldin": 1.349983677994228,
+        "calinski_harabasz": 2002.6390850876662,
+        "inertia": 15091.547267997392
+      },
+      {
+        "k": 7,
+        "silhouette": 0.2664977495138918,
+        "davies_bouldin": 1.3245192224639446,
+        "calinski_harabasz": 1924.0684365581953,
+        "inertia": 13692.634844460565
+      },
+      {
+        "k": 8,
+        "silhouette": 0.2560463638005221,
+        "davies_bouldin": 1.324434778379743,
+        "calinski_harabasz": 1815.275216612268,
+        "inertia": 12791.25161120459
+      },
+      {
+        "k": 9,
+        "silhouette": 0.2538698101553815,
+        "davies_bouldin": 1.3011810293269752,
+        "calinski_harabasz": 1726.6304025105442,
+        "inertia": 12037.07862886825
+      },
+      {
+        "k": 10,
+        "silhouette": 0.25616218594538676,
+        "davies_bouldin": 1.2746595025118546,
+        "calinski_harabasz": 1655.7347816505328,
+        "inertia": 11376.673958190275
+      }
+    ]
+  }
+}

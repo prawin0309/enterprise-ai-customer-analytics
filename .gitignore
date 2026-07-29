@@ -1,0 +1,20 @@
+# Virtual environment
+.venv/
+venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets — never commit API keys
+.env
+*.key
+secrets.json
+
+# OS artefacts
+Thumbs.db
+.DS_Store

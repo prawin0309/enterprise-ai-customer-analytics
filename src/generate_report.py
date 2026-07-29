@@ -1,0 +1,718 @@
+"""Generate the submission-ready capstone PDF report with ReportLab.
+
+Maps each machine-learning component to the business KPI it serves, and
+summarises measured model performance, segmentation results, the fused
+intelligence layer and the LLM insight stage.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from datetime import date
+from pathlib import Path
+
+import pandas as pd
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import cm
+from reportlab.platypus import (
+    KeepTogether,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
+
+# --------------------------------------------------------------------------- #
+# Configuration
+# --------------------------------------------------------------------------- #
+
+PROJECT_DIR = Path(r"D:\DS_FO")
+REPORT_DIR = PROJECT_DIR / "reports"
+PROCESSED_DIR = PROJECT_DIR / "data" / "processed"
+
+METRICS_FILE = REPORT_DIR / "model_metrics.json"
+SHAP_FILE = REPORT_DIR / "shap_feature_importance.csv"
+FUSION_FILE = REPORT_DIR / "fusion_summary.csv"
+CLUSTER_FILE = REPORT_DIR / "cluster_profiles.csv"
+OUTPUT_FILE = REPORT_DIR / "Capstone_Final_Report.pdf"
+
+BRAND_COLOR = colors.HexColor("#1F4E79")
+ACCENT_COLOR = colors.HexColor("#2E75B6")
+LIGHT_ROW = colors.HexColor("#EAF1F8")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)-7s | %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger("generate_report")
+
+
+# --------------------------------------------------------------------------- #
+# Styles
+# --------------------------------------------------------------------------- #
+
+
+def build_styles() -> dict:
+    """Return the paragraph styles used throughout the report."""
+    base = getSampleStyleSheet()
+    return {
+        "title": ParagraphStyle(
+            "ReportTitle",
+            parent=base["Title"],
+            fontSize=21,
+            leading=26,
+            textColor=BRAND_COLOR,
+            spaceAfter=6,
+        ),
+        "subtitle": ParagraphStyle(
+            "ReportSubtitle",
+            parent=base["Normal"],
+            fontSize=12,
+            leading=16,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor("#444444"),
+            spaceAfter=18,
+        ),
+        "heading": ParagraphStyle(
+            "SectionHeading",
+            parent=base["Heading1"],
+            fontSize=14,
+            leading=18,
+            textColor=BRAND_COLOR,
+            spaceBefore=14,
+            spaceAfter=8,
+        ),
+        "subheading": ParagraphStyle(
+            "SubHeading",
+            parent=base["Heading2"],
+            fontSize=11.5,
+            leading=15,
+            textColor=ACCENT_COLOR,
+            spaceBefore=10,
+            spaceAfter=5,
+        ),
+        "body": ParagraphStyle(
+            "BodyJustified",
+            parent=base["Normal"],
+            fontSize=9.5,
+            leading=14,
+            alignment=TA_JUSTIFY,
+            spaceAfter=7,
+        ),
+        "bullet": ParagraphStyle(
+            "BodyBullet",
+            parent=base["Normal"],
+            fontSize=9.5,
+            leading=13.5,
+            leftIndent=14,
+            bulletIndent=4,
+            spaceAfter=3,
+        ),
+        "cell": ParagraphStyle(
+            "TableCell", parent=base["Normal"], fontSize=8, leading=10.5
+        ),
+        "cell_header": ParagraphStyle(
+            "TableCellHeader",
+            parent=base["Normal"],
+            fontSize=8,
+            leading=10.5,
+            textColor=colors.white,
+            fontName="Helvetica-Bold",
+        ),
+        "caption": ParagraphStyle(
+            "Caption",
+            parent=base["Normal"],
+            fontSize=8,
+            leading=11,
+            textColor=colors.HexColor("#666666"),
+            spaceAfter=10,
+        ),
+    }
+
+
+def make_table(rows: list[list], styles: dict, widths: list[float]) -> Table:
+    """Build a branded table whose first row is the header."""
+    data = [
+        [
+            Paragraph(str(cell), styles["cell_header"] if index == 0 else styles["cell"])
+            for cell in row
+        ]
+        for index, row in enumerate(rows)
+    ]
+    table = Table(data, colWidths=widths, repeatRows=1, hAlign="LEFT")
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), BRAND_COLOR),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#B7C9DC")),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT_ROW]),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ]
+        )
+    )
+    return table
+
+
+# --------------------------------------------------------------------------- #
+# Page furniture
+# --------------------------------------------------------------------------- #
+
+
+def draw_page_furniture(canvas, document) -> None:
+    """Draw the header rule and page footer on every page."""
+    canvas.saveState()
+    width, height = A4
+
+    canvas.setStrokeColor(BRAND_COLOR)
+    canvas.setLineWidth(1.4)
+    canvas.line(2 * cm, height - 1.5 * cm, width - 2 * cm, height - 1.5 * cm)
+
+    canvas.setFont("Helvetica", 7.5)
+    canvas.setFillColor(colors.HexColor("#666666"))
+    canvas.drawString(
+        2 * cm,
+        height - 1.25 * cm,
+        "Enterprise AI-Powered Customer Analytics & Strategic Insight Framework",
+    )
+    canvas.line(2 * cm, 1.5 * cm, width - 2 * cm, 1.5 * cm)
+    canvas.drawString(2 * cm, 1.1 * cm, f"Generated {date.today().isoformat()}")
+    canvas.drawRightString(width - 2 * cm, 1.1 * cm, f"Page {document.page}")
+    canvas.restoreState()
+
+
+# --------------------------------------------------------------------------- #
+# Content sections
+# --------------------------------------------------------------------------- #
+
+
+def build_story(styles: dict, data: dict) -> list:
+    """Assemble the full flowable story for the report."""
+    metrics = data["metrics"]
+    churn = metrics["churn_classification"]
+    revenue = metrics["revenue_regression"]
+    segmentation = metrics["segmentation"]
+    fusion = data["fusion"]
+
+    story: list = []
+    full_width = [11.5 * cm, 5.5 * cm]
+
+    # --- Title page ------------------------------------------------------
+    story.append(Spacer(1, 2.5 * cm))
+    story.append(
+        Paragraph(
+            "Enterprise AI-Powered Customer Analytics "
+            "&amp; Strategic Insight Framework",
+            styles["title"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "Churn Prediction, Revenue Forecasting, Behavioural Segmentation "
+            "and LLM-Generated Executive Intelligence<br/>"
+            "for a SaaS / CRM Platform (Salesforce / Zoho style)",
+            styles["subtitle"],
+        )
+    )
+    story.append(Spacer(1, 0.6 * cm))
+    story.append(
+        make_table(
+            [
+                ["Attribute", "Detail"],
+                ["Domain", "SaaS / CRM Analytics / Customer Intelligence"],
+                ["Dataset", "Star schema: 4 fact tables, 3 dimension tables"],
+                ["Modelling grain", f"{len(fusion):,} customers (one row each)"],
+                ["Features engineered", f"{churn['n_features']} modelling features"],
+                ["Classification target", "Churn (binary)"],
+                ["Regression target", "Next_Quarter_Revenue_USD (continuous)"],
+                ["Report date", date.today().strftime("%d %B %Y")],
+            ],
+            styles,
+            full_width,
+        )
+    )
+    story.append(PageBreak())
+
+    # --- 1. Executive summary -------------------------------------------
+    story.append(Paragraph("1. Executive Summary", styles["heading"]))
+    story.append(
+        Paragraph(
+            "This project delivers an end-to-end customer intelligence system for a "
+            "subscription SaaS CRM platform. Four relational fact tables and three "
+            f"dimension tables were consolidated into a single customer-level table of "
+            f"{len(fusion):,} accounts and {churn['n_features']} engineered features. "
+            "Three machine-learning models were trained on that table, their outputs "
+            "fused into a standardised per-account intelligence profile, and a large "
+            "language model used to translate those profiles into executive briefings.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            f"The churn classifier achieves a hold-out ROC-AUC of "
+            f"<b>{churn['roc_auc']:.4f}</b> and an F1 of <b>{churn['f1_score']:.4f}</b> "
+            f"on the minority churn class. The revenue model explains "
+            f"<b>{revenue['r2']:.1%}</b> of next-quarter revenue variance with an RMSE "
+            f"of <b>${revenue['rmse']:,.0f}</b>. Segmentation resolves the portfolio "
+            f"into <b>{segmentation['selected_k']}</b> behavioural clusters whose churn "
+            "rates differ by a factor of roughly seven. Fusing these outputs identifies "
+            f"<b>${fusion['revenue_at_risk_usd'].sum():,.0f}</b> of next-quarter revenue "
+            "sitting in accounts with elevated churn probability.",
+            styles["body"],
+        )
+    )
+
+    # --- 2. Business problem to ML mapping -------------------------------
+    story.append(Paragraph("2. Business Problem to ML Task Mapping", styles["heading"]))
+    story.append(
+        Paragraph(
+            "Every technical component is anchored to a measurable business "
+            "objective, so model performance translates directly into commercial "
+            "outcomes.",
+            styles["body"],
+        )
+    )
+    story.append(
+        make_table(
+            [
+                ["Business Problem", "ML Task", "Output", "Business KPI Served"],
+                [
+                    "Customers cancelling subscriptions",
+                    "Binary classification (XGBoost)",
+                    "Churn probability 0-1",
+                    "Retention rate, customer lifetime value",
+                ],
+                [
+                    "Unreliable revenue planning",
+                    "Regression (GradientBoosting)",
+                    "Next-quarter revenue (USD)",
+                    "Forecast accuracy, quota setting",
+                ],
+                [
+                    "Undifferentiated marketing",
+                    "Clustering (KMeans + PCA)",
+                    "Behavioural cluster ID",
+                    "Campaign conversion, personalisation",
+                ],
+                [
+                    "Unclear account prioritisation",
+                    "Feature fusion / scoring",
+                    "Risk, potential, priority scores",
+                    "Revenue at risk, CSM coverage",
+                ],
+                [
+                    "Technical output not board-ready",
+                    "LLM narrative generation",
+                    "Executive briefing text",
+                    "Decision latency, reporting effort",
+                ],
+            ],
+            styles,
+            [4.2 * cm, 4.0 * cm, 3.8 * cm, 5.0 * cm],
+        )
+    )
+
+    # --- 3. Methodology ---------------------------------------------------
+    story.append(Paragraph("3. Methodology", styles["heading"]))
+    story.append(Paragraph("3.1 Data engineering", styles["subheading"]))
+    for text in [
+        "Fact tables aggregated from their native grain to customer grain: "
+        "transactions (54,858 rows), monthly usage snapshots (131,268 rows) and "
+        "engagement events (54,822 rows).",
+        "Dimension attributes joined on Geo_ID, Industry_ID and Product_ID. "
+        "Duplicate dimension keys were removed first — dim_geography ships five "
+        "duplicate Geo_ID rows that would otherwise fan out the customer grain.",
+        "150 duplicate customer records removed, leaving 5,000 unique accounts.",
+        "Missing values imputed with the median (numerical) and mode (categorical); "
+        "zero missing cells remain.",
+    ]:
+        story.append(Paragraph(text, styles["bullet"], bulletText="\u2022"))
+
+    story.append(Paragraph("3.2 Feature engineering", styles["subheading"]))
+    for text in [
+        "<b>Tenure:</b> contract duration, tenure in days and years, days to "
+        "contract end.",
+        "<b>Usage intensity:</b> sessions per active user weighted by session "
+        "length, DAU/MAU ratio, API calls per licence, error rate per session.",
+        "<b>Engagement ratios:</b> events per tenure month, escalated ticket ratio, "
+        "support dependency, sentiment-based engagement quality score.",
+        "<b>Revenue:</b> quarterly revenue mean, volatility, latest value and growth "
+        "ratio, average monthly revenue, CLV approximation, payment reliability.",
+    ]:
+        story.append(Paragraph(text, styles["bullet"], bulletText="\u2022"))
+
+    story.append(Paragraph("3.3 Encoding and class balance", styles["subheading"]))
+    story.append(
+        Paragraph(
+            "Binary and high-cardinality categoricals were label encoded; "
+            "low-cardinality nominals were one-hot encoded, producing 190 columns. "
+            "The churn target is imbalanced at roughly 11.3% positives. SMOTE was "
+            "applied <b>only to the training split after the stratified train/test "
+            "split</b>, so no synthetic record can reach the hold-out set.",
+            styles["body"],
+        )
+    )
+
+    story.append(PageBreak())
+
+    # --- 4. Model performance --------------------------------------------
+    story.append(Paragraph("4. Model Performance", styles["heading"]))
+    story.append(Paragraph("4.1 Churn classification", styles["subheading"]))
+    story.append(
+        make_table(
+            [
+                ["Metric", "Value", "Business Interpretation"],
+                [
+                    "ROC-AUC (hold-out)",
+                    f"{churn['roc_auc']:.4f}",
+                    "Separates churners from retained accounts reliably",
+                ],
+                [
+                    "F1-score (churn class)",
+                    f"{churn['f1_score']:.4f}",
+                    "Balanced precision and recall on the minority class",
+                ],
+                [
+                    "Baseline GradientBoosting ROC-AUC",
+                    f"{churn['baseline_gb_roc_auc']:.4f}",
+                    "XGBoost selected as the stronger model",
+                ],
+                [
+                    "Features used",
+                    f"{churn['n_features']}",
+                    "Post-encoding modelling features",
+                ],
+            ],
+            styles,
+            [4.6 * cm, 3.0 * cm, 9.4 * cm],
+        )
+    )
+    story.append(
+        Paragraph(
+            "Note: the cross-validated ROC-AUC recorded in model_metrics.json is "
+            "computed over SMOTE-balanced folds and is optimistic, because synthetic "
+            "minority samples leak across fold boundaries. The hold-out ROC-AUC above "
+            "is the figure that should be quoted.",
+            styles["caption"],
+        )
+    )
+
+    story.append(Paragraph("4.2 Explainable AI — SHAP churn drivers", styles["subheading"]))
+    shap_rows = [["Rank", "Feature", "Mean |SHAP|", "Business Meaning"]]
+    meanings = {
+        "txn_count": "Transaction frequency — low volume signals disengagement",
+        "Renewal_Risk_Flag_Low": "CRM renewal-risk flag set to Low",
+        "txn_mean_payment_delay_days": "Average invoice payment delay",
+        "escalated_ticket_ratio": "Share of support tickets escalated",
+        "Relative_Churn_Risk_Medium": "Industry-level baseline churn risk",
+        "txn_renewal_count": "Number of renewal transactions completed",
+        "usage_mean_license_utilization_pct": "Licences actually used vs purchased",
+        "Relative_Churn_Risk_Low": "Industry-level baseline churn risk",
+        "Renewal_Risk_Flag_Medium": "CRM renewal-risk flag set to Medium",
+        "tickets_per_tenure_month": "Support ticket rate per month of tenure",
+    }
+    for rank, row in enumerate(data["shap"].head(10).itertuples(index=False), start=1):
+        shap_rows.append(
+            [
+                rank,
+                row.feature,
+                f"{row.mean_abs_shap:.4f}",
+                meanings.get(row.feature, "Model-derived behavioural signal"),
+            ]
+        )
+    story.append(make_table(shap_rows, styles, [1.2 * cm, 5.6 * cm, 2.4 * cm, 7.8 * cm]))
+
+    story.append(Paragraph("4.3 Revenue forecasting", styles["subheading"]))
+    story.append(
+        make_table(
+            [
+                ["Metric", "Value", "Business Interpretation"],
+                [
+                    "Selected model",
+                    revenue["selected_model"],
+                    "Chosen over the alternative on hold-out RMSE",
+                ],
+                [
+                    "RMSE",
+                    f"${revenue['rmse']:,.2f}",
+                    "Typical forecast error, penalising large misses",
+                ],
+                [
+                    "MAE",
+                    f"${revenue['mae']:,.2f}",
+                    "Average absolute error per account per quarter",
+                ],
+                ["R\u00b2", f"{revenue['r2']:.4f}", "Share of revenue variance explained"],
+                [
+                    "Adjusted R\u00b2",
+                    f"{revenue['adjusted_r2']:.4f}",
+                    "Corrected for the number of features used",
+                ],
+                [
+                    "Cross-validated R\u00b2",
+                    f"{revenue['cv_r2_mean']:.4f} \u00b1 {revenue['cv_r2_std']:.4f}",
+                    "Stability across five folds",
+                ],
+            ],
+            styles,
+            [4.0 * cm, 3.6 * cm, 9.4 * cm],
+        )
+    )
+
+    story.append(Paragraph("4.4 Behavioural segmentation", styles["subheading"]))
+    story.append(
+        make_table(
+            [
+                ["Metric", "Value", "Assessment"],
+                [
+                    "Clusters selected (k)",
+                    str(segmentation["selected_k"]),
+                    "Chosen by best silhouette across k = 2 to 10",
+                ],
+                [
+                    "Silhouette score",
+                    f"{segmentation['silhouette']:.4f}",
+                    f"Below the {segmentation['silhouette_target']:.2f} project target",
+                ],
+                [
+                    "Davies-Bouldin index",
+                    f"{segmentation['davies_bouldin']:.4f}",
+                    "Lower is better; indicates moderate compactness",
+                ],
+                [
+                    "Calinski-Harabasz",
+                    f"{segmentation['calinski_harabasz']:,.1f}",
+                    "Higher is better; confirms real separation",
+                ],
+                [
+                    "PCA components",
+                    str(segmentation["pca_components"]),
+                    "90% of behavioural variance retained",
+                ],
+            ],
+            styles,
+            [4.0 * cm, 3.6 * cm, 9.4 * cm],
+        )
+    )
+    story.append(
+        Paragraph(
+            "<b>Honest assessment:</b> the 0.60 silhouette target was not met. The best "
+            f"achievable score was {segmentation['silhouette']:.4f} at k="
+            f"{segmentation['selected_k']}. SaaS behavioural features are continuous "
+            "and overlapping, so accounts form a gradient rather than well-separated "
+            "spheres, and no k between 2 and 10 approached the target. The clusters "
+            "remain commercially useful: churn rates differ roughly sevenfold between "
+            "them, which is the property the business actually needs.",
+            styles["body"],
+        )
+    )
+
+    story.append(PageBreak())
+
+    # --- 5. Segment profile ----------------------------------------------
+    story.append(Paragraph("5. Customer Segment Profiles", styles["heading"]))
+    cluster_rows = [
+        [
+            "Cluster",
+            "Accounts",
+            "Mean MAU",
+            "Adoption %",
+            "Avg Monthly Rev",
+            "Churn Rate",
+        ]
+    ]
+    for cluster_id, row in data["clusters"].iterrows():
+        size = int((fusion["cluster_id"] == cluster_id).sum())
+        cluster_rows.append(
+            [
+                f"{cluster_id}",
+                f"{size:,}",
+                f"{row['usage_mean_mau']:,.0f}",
+                f"{row['usage_mean_feature_adoption_pct']:.1f}%",
+                f"${row['avg_monthly_revenue_usd']:,.0f}",
+                f"{row['churn_rate']:.1%}",
+            ]
+        )
+    story.append(
+        make_table(
+            cluster_rows,
+            styles,
+            [2.0 * cm, 2.4 * cm, 2.4 * cm, 2.6 * cm, 3.6 * cm, 2.6 * cm],
+        )
+    )
+    story.append(
+        Paragraph(
+            "Cluster 0 (<i>Disengaged At-Risk Accounts</i>) combines low usage, low "
+            "adoption and heavy support dependency with a materially higher churn "
+            "rate. Cluster 1 (<i>Loyal High-Value Accounts</i>) shows roughly four "
+            "times the monthly active users, more than double the feature adoption, "
+            "and near-negligible churn. Retention spend belongs in cluster 0; expansion "
+            "and upsell motions belong in cluster 1.",
+            styles["body"],
+        )
+    )
+
+    # --- 6. Fusion layer --------------------------------------------------
+    story.append(Paragraph("6. Unified Customer Intelligence Layer", styles["heading"]))
+    story.append(
+        Paragraph(
+            "The fusion layer scores every account with all three models and emits a "
+            "standardised JSON profile containing churn probability and risk band, "
+            "next-quarter revenue forecast, revenue at risk, cluster assignment and "
+            "label, percentile-normalised risk / potential / priority scores, and the "
+            "top five per-account SHAP drivers with direction of effect.",
+            styles["body"],
+        )
+    )
+    risk_counts = fusion["risk_level"].value_counts()
+    story.append(
+        make_table(
+            [
+                ["Portfolio Indicator", "Value"],
+                ["Accounts profiled", f"{len(fusion):,}"],
+                ["High-risk accounts", f"{risk_counts.get('High', 0):,}"],
+                ["Medium-risk accounts", f"{risk_counts.get('Medium', 0):,}"],
+                ["Low-risk accounts", f"{risk_counts.get('Low', 0):,}"],
+                [
+                    "Total forecast revenue at risk",
+                    f"${fusion['revenue_at_risk_usd'].sum():,.0f}",
+                ],
+                [
+                    "Mean churn probability",
+                    f"{fusion['churn_probability'].mean():.1%}",
+                ],
+                [
+                    "Top 5 accounts, revenue at risk",
+                    f"${fusion.nlargest(5, 'revenue_at_risk_usd')['revenue_at_risk_usd'].sum():,.0f}",
+                ],
+            ],
+            styles,
+            full_width,
+        )
+    )
+
+    # --- 7. LLM layer -----------------------------------------------------
+    story.append(Paragraph("7. LLM-Based Executive Insight Generation", styles["heading"]))
+    story.append(
+        Paragraph(
+            "Structured intelligence profiles are passed to a Gemini model under a "
+            "system instruction that forbids invented metrics and requires every claim "
+            "to trace back to a supplied value. Each briefing covers account risk "
+            "level, revenue impact, behavioural segment interpretation, prioritised "
+            "strategic recommendations with owner and timeframe, and a targeted "
+            "renewal plus upsell play. Five briefings were generated for the accounts "
+            "carrying the highest forecast revenue at risk and exported to "
+            "reports/executive_insights.md.",
+            styles["body"],
+        )
+    )
+    story.append(
+        Paragraph(
+            "Implementation note: the originally specified gemini-pro model has been "
+            "retired from the API. The pipeline probes current models at runtime and "
+            "uses the first one the credential can serve.",
+            styles["caption"],
+        )
+    )
+
+    # --- 8. Limitations ---------------------------------------------------
+    story.append(Paragraph("8. Limitations and Future Work", styles["heading"]))
+    for text in [
+        "<b>Potential target leakage.</b> Transaction count is the dominant churn "
+        "driver, but low transaction volume is partly a consequence of churning "
+        "rather than a leading indicator. A production rebuild should ablate it and "
+        "re-measure.",
+        "<b>Optimistic cross-validation.</b> Cross-validation was run on SMOTE-balanced "
+        "data, so synthetic samples leak across folds. Resampling should be moved "
+        "inside a pipeline evaluated per fold.",
+        "<b>Segmentation separation.</b> Silhouette of 0.376 falls short of the 0.60 "
+        "target; density-based or model-based clustering may suit gradient-shaped "
+        "behavioural data better.",
+        "<b>Static snapshot.</b> The system scores a point-in-time extract. Production "
+        "deployment needs scheduled re-scoring, drift monitoring and retraining "
+        "triggers.",
+        "<b>Insight validation.</b> LLM briefings are constrained by prompt design but "
+        "not yet automatically checked; a factuality validator comparing generated "
+        "numbers against the source profile is the natural next step.",
+    ]:
+        story.append(Paragraph(text, styles["bullet"], bulletText="\u2022"))
+
+    # --- 9. Deliverables --------------------------------------------------
+    story.append(Paragraph("9. Deliverables", styles["heading"]))
+    story.append(
+        make_table(
+            [
+                ["Artefact", "Location"],
+                ["Preprocessing pipeline", "src/preprocessing.py"],
+                ["Model training", "src/train_models.py"],
+                ["Intelligence fusion layer", "src/fusion_layer.py"],
+                ["LLM insight generation", "src/llm_insights.py"],
+                ["PDF report generator", "src/generate_report.py"],
+                ["Executed analysis notebook", "notebooks/EDA_and_Modeling.ipynb"],
+                ["Serialised models", "models/*.pkl"],
+                ["Processed dataset", "data/processed/processed_customer_data.csv"],
+                ["Customer intelligence profiles", "data/processed/customer_profiles.json"],
+                ["Executive briefings", "reports/executive_insights.md"],
+                ["Model metrics", "reports/model_metrics.json"],
+                ["This report", "reports/Capstone_Final_Report.pdf"],
+            ],
+            styles,
+            full_width,
+        )
+    )
+    return story
+
+
+# --------------------------------------------------------------------------- #
+# Orchestration
+# --------------------------------------------------------------------------- #
+
+
+def load_inputs() -> dict:
+    """Load every artefact the report renders."""
+    return {
+        "metrics": json.loads(METRICS_FILE.read_text(encoding="utf-8")),
+        "shap": pd.read_csv(SHAP_FILE),
+        "fusion": pd.read_csv(FUSION_FILE),
+        "clusters": pd.read_csv(CLUSTER_FILE, index_col=0),
+    }
+
+
+def generate_report() -> Path:
+    """Render the capstone PDF report."""
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    data = load_inputs()
+    styles = build_styles()
+
+    document = SimpleDocTemplate(
+        str(OUTPUT_FILE),
+        pagesize=A4,
+        leftMargin=2 * cm,
+        rightMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm,
+        title="Enterprise AI-Powered Customer Analytics Capstone Report",
+        author="Customer Intelligence Team",
+    )
+    document.build(
+        build_story(styles, data),
+        onFirstPage=draw_page_furniture,
+        onLaterPages=draw_page_furniture,
+    )
+    logger.info(
+        "Wrote %s (%.1f KB)", OUTPUT_FILE, OUTPUT_FILE.stat().st_size / 1024
+    )
+    return OUTPUT_FILE
+
+
+if __name__ == "__main__":
+    generate_report()

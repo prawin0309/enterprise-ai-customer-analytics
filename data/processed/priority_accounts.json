@@ -1,0 +1,387 @@
+[
+  {
+    "customer_id": 12908,
+    "account_context": {
+      "industry": "Healthcare",
+      "business_model": "B2B",
+      "country": "Singapore",
+      "market_tier": "Tier1",
+      "account_tier": "Platinum",
+      "company_size": "SMB (50-250)",
+      "plan_type": "Professional",
+      "module": "Marketing",
+      "support_level": "Standard",
+      "contract_type": "Annual",
+      "tenure_months": 59
+    },
+    "churn_prediction": {
+      "probability": 0.8724,
+      "risk_level": "High",
+      "renewal_probability_crm": 0.84
+    },
+    "revenue_forecast": {
+      "predicted_next_quarter_usd": 15868.45,
+      "current_acv_usd": 56540,
+      "lifetime_revenue_usd": 287628,
+      "revenue_at_risk_usd": 13844.37
+    },
+    "segmentation": {
+      "cluster_id": 1,
+      "cluster_label": "Loyal High-Value Accounts",
+      "cluster_size": 3599,
+      "cluster_churn_rate": 0.0403,
+      "cluster_mean_monthly_revenue_usd": 2127.22,
+      "cluster_mean_feature_adoption_pct": 73.34
+    },
+    "intelligence_scores": {
+      "risk_score": 90.3,
+      "revenue_potential_score": 88.3,
+      "priority_score": 100.0,
+      "engagement_level": "High",
+      "health_score": 100,
+      "csat_score": 4.3,
+      "nps_score": 73.0,
+      "support_tickets": 7
+    },
+    "top_churn_drivers": [
+      {
+        "feature": "txn_count",
+        "value": 6.0,
+        "shap_value": 2.655,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "Renewal_Risk_Flag_Low",
+        "value": 1.0,
+        "shap_value": -1.3728,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Sector_Healthcare",
+        "value": 1.0,
+        "shap_value": -0.578,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Sessions_Per_User_Day",
+        "value": 5.3,
+        "shap_value": -0.5074,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "escalated_ticket_ratio",
+        "value": 0.0,
+        "shap_value": -0.3911,
+        "direction": "reduces_churn_risk"
+      }
+    ]
+  },
+  {
+    "customer_id": 13559,
+    "account_context": {
+      "industry": "Telecommunications",
+      "business_model": "B2B",
+      "country": "United Kingdom",
+      "market_tier": "Tier1",
+      "account_tier": "Bronze",
+      "company_size": "SMB (50-250)",
+      "plan_type": "Starter",
+      "module": "Platform",
+      "support_level": "Community",
+      "contract_type": "Multi-Year",
+      "tenure_months": 3
+    },
+    "churn_prediction": {
+      "probability": 0.8529,
+      "risk_level": "High",
+      "renewal_probability_crm": 0.78
+    },
+    "revenue_forecast": {
+      "predicted_next_quarter_usd": 15536.02,
+      "current_acv_usd": 54848,
+      "lifetime_revenue_usd": 12155,
+      "revenue_at_risk_usd": 13251.07
+    },
+    "segmentation": {
+      "cluster_id": 1,
+      "cluster_label": "Loyal High-Value Accounts",
+      "cluster_size": 3599,
+      "cluster_churn_rate": 0.0403,
+      "cluster_mean_monthly_revenue_usd": 2127.22,
+      "cluster_mean_feature_adoption_pct": 73.34
+    },
+    "intelligence_scores": {
+      "risk_score": 90.0,
+      "revenue_potential_score": 88.0,
+      "priority_score": 100.0,
+      "engagement_level": "Moderate",
+      "health_score": 77,
+      "csat_score": 3.7,
+      "nps_score": 18.0,
+      "support_tickets": 2
+    },
+    "top_churn_drivers": [
+      {
+        "feature": "Renewal_Risk_Flag_Low",
+        "value": 1.0,
+        "shap_value": -1.3927,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "txn_mean_payment_delay_days",
+        "value": 1.0,
+        "shap_value": -0.4816,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Mobile_Users_Pct",
+        "value": 6.6,
+        "shap_value": 0.463,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "Relative_Churn_Risk_Medium",
+        "value": 1.0,
+        "shap_value": -0.4402,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "escalated_ticket_ratio",
+        "value": 0.0,
+        "shap_value": -0.425,
+        "direction": "reduces_churn_risk"
+      }
+    ]
+  },
+  {
+    "customer_id": 12959,
+    "account_context": {
+      "industry": "Energy",
+      "business_model": "B2B",
+      "country": "United States",
+      "market_tier": "Tier1",
+      "account_tier": "Platinum",
+      "company_size": "Startup (<50)",
+      "plan_type": "Starter",
+      "module": "Marketing",
+      "support_level": "Community",
+      "contract_type": "Annual",
+      "tenure_months": 74
+    },
+    "churn_prediction": {
+      "probability": 0.6136,
+      "risk_level": "High",
+      "renewal_probability_crm": 0.92
+    },
+    "revenue_forecast": {
+      "predicted_next_quarter_usd": 19762.01,
+      "current_acv_usd": 76108,
+      "lifetime_revenue_usd": 431397,
+      "revenue_at_risk_usd": 12125.58
+    },
+    "segmentation": {
+      "cluster_id": 1,
+      "cluster_label": "Loyal High-Value Accounts",
+      "cluster_size": 3599,
+      "cluster_churn_rate": 0.0403,
+      "cluster_mean_monthly_revenue_usd": 2127.22,
+      "cluster_mean_feature_adoption_pct": 73.34
+    },
+    "intelligence_scores": {
+      "risk_score": 89.1,
+      "revenue_potential_score": 92.2,
+      "priority_score": 100.0,
+      "engagement_level": "High",
+      "health_score": 69,
+      "csat_score": 4.8,
+      "nps_score": 15.0,
+      "support_tickets": 3
+    },
+    "top_churn_drivers": [
+      {
+        "feature": "txn_count",
+        "value": 4.0,
+        "shap_value": 4.1158,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "Renewal_Risk_Flag_Low",
+        "value": 1.0,
+        "shap_value": -1.0656,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "txn_mean_payment_delay_days",
+        "value": 0.0,
+        "shap_value": -0.5918,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Sector_Energy",
+        "value": 1.0,
+        "shap_value": -0.4242,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Relative_Churn_Risk_Low",
+        "value": 1.0,
+        "shap_value": -0.3539,
+        "direction": "reduces_churn_risk"
+      }
+    ]
+  },
+  {
+    "customer_id": 14356,
+    "account_context": {
+      "industry": "Energy",
+      "business_model": "B2B",
+      "country": "United Kingdom",
+      "market_tier": "Tier1",
+      "account_tier": "Silver",
+      "company_size": NaN,
+      "plan_type": "Professional",
+      "module": "Analytics",
+      "support_level": "Standard",
+      "contract_type": "Annual",
+      "tenure_months": 7
+    },
+    "churn_prediction": {
+      "probability": 0.9404,
+      "risk_level": "High",
+      "renewal_probability_crm": 0.68
+    },
+    "revenue_forecast": {
+      "predicted_next_quarter_usd": 11812.73,
+      "current_acv_usd": 40313,
+      "lifetime_revenue_usd": 22958,
+      "revenue_at_risk_usd": 11108.92
+    },
+    "segmentation": {
+      "cluster_id": 1,
+      "cluster_label": "Loyal High-Value Accounts",
+      "cluster_size": 3599,
+      "cluster_churn_rate": 0.0403,
+      "cluster_mean_monthly_revenue_usd": 2127.22,
+      "cluster_mean_feature_adoption_pct": 73.34
+    },
+    "intelligence_scores": {
+      "risk_score": 92.2,
+      "revenue_potential_score": 82.9,
+      "priority_score": 99.9,
+      "engagement_level": "High",
+      "health_score": 75,
+      "csat_score": 4.9,
+      "nps_score": 63.0,
+      "support_tickets": 5
+    },
+    "top_churn_drivers": [
+      {
+        "feature": "txn_count",
+        "value": 5.0,
+        "shap_value": 2.9962,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "Renewal_Risk_Flag_Low",
+        "value": 1.0,
+        "shap_value": -1.117,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "txn_mean_payment_delay_days",
+        "value": 15.0,
+        "shap_value": 0.3898,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "txn_renewal_count",
+        "value": 1.0,
+        "shap_value": 0.3521,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "Relative_Churn_Risk_Low",
+        "value": 1.0,
+        "shap_value": -0.3442,
+        "direction": "reduces_churn_risk"
+      }
+    ]
+  },
+  {
+    "customer_id": 10880,
+    "account_context": {
+      "industry": "Telecommunications",
+      "business_model": "B2B",
+      "country": "United Kingdom",
+      "market_tier": "Tier1",
+      "account_tier": "Gold",
+      "company_size": "SMB (50-250)",
+      "plan_type": "Enterprise",
+      "module": "Core",
+      "support_level": "Premium",
+      "contract_type": "Annual",
+      "tenure_months": 30
+    },
+    "churn_prediction": {
+      "probability": 0.9654,
+      "risk_level": "High",
+      "renewal_probability_crm": 0.64
+    },
+    "revenue_forecast": {
+      "predicted_next_quarter_usd": 10764.58,
+      "current_acv_usd": 42033,
+      "lifetime_revenue_usd": 109830,
+      "revenue_at_risk_usd": 10392.0
+    },
+    "segmentation": {
+      "cluster_id": 1,
+      "cluster_label": "Loyal High-Value Accounts",
+      "cluster_size": 3599,
+      "cluster_churn_rate": 0.0403,
+      "cluster_mean_monthly_revenue_usd": 2127.22,
+      "cluster_mean_feature_adoption_pct": 73.34
+    },
+    "intelligence_scores": {
+      "risk_score": 93.7,
+      "revenue_potential_score": 81.2,
+      "priority_score": 99.9,
+      "engagement_level": "Low",
+      "health_score": 72,
+      "csat_score": 3.9,
+      "nps_score": 44.0,
+      "support_tickets": 10
+    },
+    "top_churn_drivers": [
+      {
+        "feature": "txn_count",
+        "value": 4.0,
+        "shap_value": 4.1352,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "Renewal_Risk_Flag_Low",
+        "value": 0.0,
+        "shap_value": 1.2222,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "usage_mean_license_utilization_pct",
+        "value": 100.0,
+        "shap_value": -0.9013,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Renewal_Risk_Flag_Medium",
+        "value": 1.0,
+        "shap_value": -0.4831,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Relative_Churn_Risk_Medium",
+        "value": 1.0,
+        "shap_value": -0.3959,
+        "direction": "reduces_churn_risk"
+      }
+    ]
+  }
+]

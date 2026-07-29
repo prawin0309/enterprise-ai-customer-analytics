@@ -1,0 +1,12 @@
+pandas
+numpy
+scikit-learn
+xgboost
+imbalanced-learn
+shap
+matplotlib
+seaborn
+joblib
+google-generativeai
+reportlab
+jupyter
