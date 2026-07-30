@@ -16,12 +16,18 @@ generate executive-level briefings.
 - [Problem Statement](#problem-statement)
 - [Project Architecture](#project-architecture)
 - [Dataset](#dataset)
+- [Project Metadata](#project-metadata)
+- [Business Use Cases](#business-use-cases)
+- [Project Evaluation Metrics](#project-evaluation-metrics)
+- [Project Deliverables](#project-deliverables)
 - [Installation](#installation)
 - [Execution Instructions](#execution-instructions)
 - [Model Performance](#model-performance)
 - [Pipeline Details](#pipeline-details)
 - [Outputs](#outputs)
 - [Known Limitations](#known-limitations)
+- [Author](#author)
+- [License](#license)
 
 ---
 
@@ -120,6 +126,47 @@ hard-codes an absolute path.
 | `dim_product.csv` | Product | 32 | SKU, plan, support level |
 
 **Targets:** `Churn` (binary, 11.3% positive) · `Next_Quarter_Revenue_USD` (continuous)
+
+---
+
+## Project Metadata
+
+| Field | Detail |
+|---|---|
+| **Domain** | SaaS / CRM Customer Intelligence |
+| **Skills demonstrated** | Python · pandas · NumPy · scikit-learn · XGBoost · imbalanced-learn (SMOTE) · SHAP explainability · KMeans + PCA segmentation · leakage-aware validation · LLM prompt engineering (Gemini) · FastAPI · joblib |
+| **Technical tags** | `python` `xgboost` `scikit-learn` `shap` `churn-prediction` `clustering` `llm` `gemini` `fastapi` `machine-learning` |
+| **Dataset** | 5,000 SaaS customer records expanded to 180 modelling features, supplied with the project brief. Processed frames live in `data/processed/`. |
+
+### Business Use Cases
+
+* Flag accounts likely to churn early enough for Customer Success to intervene.
+* Forecast per-account revenue so renewal targets can be set from data, not guesswork.
+* Segment the book of business into behavioural cohorts with distinct playbooks.
+* Rank accounts by forecast revenue at risk so retention effort follows the money.
+* Generate executive briefings that turn model output into language leadership can act on.
+
+### Project Evaluation Metrics
+
+| Component | Metric | Achieved |
+|---|---|---|
+| Churn classification | ROC-AUC / F1 / Precision / Recall / Accuracy | 0.9113 / 0.6146 / 0.747 / 0.522 / 0.926 |
+| Churn classification | Cross-validated ROC-AUC | 0.9080 ± 0.0103 |
+| Revenue forecasting | RMSE / MAE / R² / Adjusted R² | $1,363.28 / $692.37 / 0.9674 / 0.9600 |
+| Segmentation | Silhouette / Davies-Bouldin / Calinski-Harabasz | 0.3760 / 1.1886 / 2,723.4 |
+| Fusion layer | Profile completeness and consistency | 100% across 5,000 profiles |
+| LLM insights | Currency figures traceable to source | 53 of 53, 0 flagged |
+
+### Project Deliverables
+
+* `notebooks/EDA_and_Modeling.ipynb` — exploratory analysis and model development
+* `src/preprocessing.py` — cleaning, feature engineering, encoding and SMOTE
+* `src/train_models.py` — tuned classifier, regressor and segmentation models
+* `src/fusion_layer.py` — unified customer profiles in JSON
+* `src/llm_insights.py` — Gemini-generated executive briefings with a factuality audit
+* `src/scoring_api.py` — FastAPI service for live scoring
+* `models/*.pkl` — persisted, deployment-ready artefacts
+* `reports/` — metrics, figures, fusion quality and the generated briefings
 
 ---
 
@@ -300,7 +347,7 @@ on hold-out RMSE, so it is the shipped regressor.
 
 | Metric | Value | Target | Status |
 | --- | --- | --- | --- |
-| **Silhouette score** | **0.3760** | > 0.60 | ❌ Not met |
+| **Silhouette score** | **0.3760** | > 0.60 | Not met |
 | Davies-Bouldin index | 1.1886 | lower better | — |
 | Calinski-Harabasz | 2,723.4 | higher better | — |
 | Clusters selected (k) | 2 | — | Best across k = 2..10 |
@@ -490,3 +537,21 @@ recommendations with owner and timeframe, and renewal + upsell plays.
 Python 3.13 · pandas · NumPy · scikit-learn · XGBoost · imbalanced-learn (SMOTE) · SHAP ·
 matplotlib · seaborn · joblib · google-generativeai (Gemini) · ReportLab · FastAPI ·
 uvicorn · Jupyter
+
+---
+
+## Author
+
+**Prawin**
+GitHub: [@prawin0309](https://github.com/prawin0309) · Email: prawin0309@gmail.com
+
+## Demo Video
+
+A recorded walkthrough of the running application is required for submission.
+Add the link here once the recording is uploaded:
+
+`Demo video: <paste LinkedIn / Google Drive link here>`
+
+## License
+
+Released under the MIT License. See [LICENSE](LICENSE) for the full text.
