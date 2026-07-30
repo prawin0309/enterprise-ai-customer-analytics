@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import textwrap
 from pathlib import Path
 
@@ -25,13 +26,21 @@ import google.generativeai as genai
 # --------------------------------------------------------------------------- #
 
 try:
-    from paths import INSIGHTS_FILE as OUTPUT_FILE, PRIORITY_FILE, PROFILES_FILE
+    from paths import (
+        INSIGHTS_FILE as OUTPUT_FILE,
+        PRIORITY_FILE,
+        PROFILES_FILE,
+        REPORT_DIR,
+    )
 except ImportError:  # imported as ``src.llm_insights``
     from src.paths import (
         INSIGHTS_FILE as OUTPUT_FILE,
         PRIORITY_FILE,
         PROFILES_FILE,
+        REPORT_DIR,
     )
+
+AUDIT_FILE = REPORT_DIR / "insight_audit.json"
 
 API_KEY_VARIABLES = ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY")
 
@@ -58,6 +67,17 @@ MODEL_CANDIDATES = (
 QUOTA_ERROR_NAMES = ("ResourceExhausted", "NotFound", "PermissionDenied")
 
 INSIGHT_COUNT = 5
+
+# A quoted dollar figure counts as grounded if it lands within this relative
+# distance of a value in the profile - the model is asked to round for
+# readability, so exact string equality would flag legitimate output.
+FIGURE_TOLERANCE = 0.01
+
+# Restatements a briefing may legitimately make: monthly, quarterly, annual.
+PERIOD_FACTORS = (3, 4, 12)
+
+# Briefings round for readability - "$40k" must not be read as forty dollars.
+SUFFIX_MULTIPLIERS = {"": 1.0, "k": 1_000.0, "m": 1_000_000.0}
 # Current Gemini models spend part of the output budget on internal reasoning
 # tokens, so the ceiling is set well above the ~450-word target briefing.
 GENERATION_CONFIG = {
@@ -251,6 +271,63 @@ def generate_insight(pool: ModelPool, profile: dict) -> str:
     return response.text.strip()
 
 
+def collect_profile_figures(node: object) -> set[float]:
+    """Walk a profile and collect every numeric value it contains."""
+    if isinstance(node, bool):
+        return set()
+    if isinstance(node, (int, float)):
+        return {abs(float(node))}
+    if isinstance(node, dict):
+        return set().union(*(collect_profile_figures(v) for v in node.values())) if node else set()
+    if isinstance(node, list):
+        return set().union(*(collect_profile_figures(v) for v in node)) if node else set()
+    return set()
+
+
+def audit_briefing(profile: dict, briefing: str) -> dict:
+    """Check every dollar figure in a briefing against the source profile.
+
+    The system instruction forbids invented metrics; this measures whether it
+    held. Only currency amounts are audited - they are the figures an executive
+    would act on. Monthly, quarterly and annual restatements of a profile value
+    are accepted, since the briefing is asked to express figures the way a
+    reader would expect them.
+
+    A flagged figure is a candidate for review, not proof of fabrication: the
+    model may legitimately combine two profile values. Treat the output as a
+    triage list.
+    """
+    grounded = collect_profile_figures(profile)
+    grounded |= {
+        value * factor for value in grounded for factor in PERIOD_FACTORS
+    }
+    grounded |= {
+        value / factor for value in grounded for factor in PERIOD_FACTORS if factor
+    }
+
+    quoted = {
+        float(amount.replace(",", "")) * SUFFIX_MULTIPLIERS[suffix.lower()]
+        for amount, suffix in re.findall(
+            r"\$([\d,]+(?:\.\d+)?)([kKmM])?(?![A-Za-z])", briefing
+        )
+    }
+    unmatched = sorted(
+        value
+        for value in quoted
+        if not any(
+            abs(value - reference) <= max(1.0, abs(reference) * FIGURE_TOLERANCE)
+            for reference in grounded
+        )
+    )
+    return {
+        "customer_id": profile["customer_id"],
+        "currency_figures_quoted": len(quoted),
+        "figures_traced_to_profile": len(quoted) - len(unmatched),
+        "figures_requiring_review": unmatched,
+        "fully_traceable": not unmatched,
+    }
+
+
 def render_report(profiles: list[dict], insights: list[str], model_name: str) -> str:
     """Assemble the generated briefings into a single markdown report."""
     total_at_risk = sum(
@@ -339,6 +416,42 @@ def run_insight_generation() -> Path:
     report = render_report(profiles, insights, pool.model_name)
     OUTPUT_FILE.write_text(report, encoding="utf-8")
     logger.info("Wrote %d briefings to %s", len(insights), OUTPUT_FILE)
+
+    audit = [
+        audit_briefing(profile, insight)
+        for profile, insight in zip(profiles, insights)
+    ]
+    traceable = sum(entry["fully_traceable"] for entry in audit)
+    flagged = sum(len(entry["figures_requiring_review"]) for entry in audit)
+    quoted = sum(entry["currency_figures_quoted"] for entry in audit)
+    AUDIT_FILE.write_text(
+        json.dumps(
+            {
+                "model": pool.model_name,
+                "briefings_audited": len(audit),
+                "briefings_fully_traceable": traceable,
+                "currency_figures_quoted": quoted,
+                "figures_requiring_review": flagged,
+                "tolerance": FIGURE_TOLERANCE,
+                "period_factors_accepted": list(PERIOD_FACTORS),
+                "note": (
+                    "A flagged figure is a review candidate, not proof of "
+                    "fabrication - the model may have combined two profile values."
+                ),
+                "per_briefing": audit,
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    logger.info(
+        "Factuality audit: %d/%d briefings fully traceable, %d of %d figures flagged for review -> %s",
+        traceable,
+        len(audit),
+        flagged,
+        quoted,
+        AUDIT_FILE,
+    )
     return OUTPUT_FILE
 
 

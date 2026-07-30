@@ -1,0 +1,51 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "briefings_audited": 5,
+  "briefings_fully_traceable": 5,
+  "currency_figures_quoted": 53,
+  "figures_requiring_review": 0,
+  "tolerance": 0.01,
+  "period_factors_accepted": [
+    3,
+    4,
+    12
+  ],
+  "note": "A flagged figure is a review candidate, not proof of fabrication - the model may have combined two profile values.",
+  "per_briefing": [
+    {
+      "customer_id": 13559,
+      "currency_figures_quoted": 10,
+      "figures_traced_to_profile": 10,
+      "figures_requiring_review": [],
+      "fully_traceable": true
+    },
+    {
+      "customer_id": 12908,
+      "currency_figures_quoted": 10,
+      "figures_traced_to_profile": 10,
+      "figures_requiring_review": [],
+      "fully_traceable": true
+    },
+    {
+      "customer_id": 14356,
+      "currency_figures_quoted": 15,
+      "figures_traced_to_profile": 15,
+      "figures_requiring_review": [],
+      "fully_traceable": true
+    },
+    {
+      "customer_id": 13396,
+      "currency_figures_quoted": 9,
+      "figures_traced_to_profile": 9,
+      "figures_requiring_review": [],
+      "fully_traceable": true
+    },
+    {
+      "customer_id": 10880,
+      "currency_figures_quoted": 9,
+      "figures_traced_to_profile": 9,
+      "figures_requiring_review": [],
+      "fully_traceable": true
+    }
+  ]
+}

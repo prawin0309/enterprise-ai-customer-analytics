@@ -1,0 +1,19 @@
+{
+  "profiles_generated": 5000,
+  "profile_completeness": 1.0,
+  "required_blocks": [
+    "account_context",
+    "churn_prediction",
+    "revenue_forecast",
+    "segmentation",
+    "intelligence_scores",
+    "top_churn_drivers"
+  ],
+  "grain_preserved": true,
+  "integration_accuracy": 1.0,
+  "risk_health_alignment_spearman": -0.5225,
+  "profiles_per_second": 2432.7,
+  "high_risk_accounts": 521,
+  "high_risk_share_of_accounts": 0.1042,
+  "high_risk_share_of_revenue_at_risk": 0.8803
+}

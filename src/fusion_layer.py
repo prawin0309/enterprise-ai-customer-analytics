@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 
 import joblib
 import numpy as np
@@ -50,6 +51,7 @@ except ImportError:  # imported as ``src.fusion_layer``
     )
 
 SOURCE_DIR = resolve_source_dir()
+QUALITY_FILE = REPORT_DIR / "fusion_quality.json"
 
 CUSTOMER_KEY = "Customer_ID"
 CHURN_TARGET = "Churn"
@@ -57,6 +59,16 @@ REVENUE_TARGET = "Next_Quarter_Revenue_USD"
 
 TOP_DRIVERS_PER_CUSTOMER = 5
 PRIORITY_ACCOUNT_COUNT = 5
+
+# Blocks every profile must carry for the fusion to count as complete.
+REQUIRED_PROFILE_BLOCKS = (
+    "account_context",
+    "churn_prediction",
+    "revenue_forecast",
+    "segmentation",
+    "intelligence_scores",
+    "top_churn_drivers",
+)
 
 # Churn probability cut-offs for the business-facing risk band.
 HIGH_RISK_THRESHOLD = 0.60
@@ -395,6 +407,63 @@ def _to_number(value: object) -> float | int | None:
     return None
 
 
+def assess_fusion_quality(
+    profiles: list[dict], fused: pd.DataFrame, elapsed_seconds: float
+) -> dict:
+    """Measure the profiling engine against the project evaluation criteria.
+
+    Covers the five checks the specification asks of the fusion layer: profile
+    completeness, risk-revenue alignment, model-output integration accuracy,
+    scalability and business utility.
+    """
+    complete = sum(
+        all(profile.get(block) for block in REQUIRED_PROFILE_BLOCKS)
+        for profile in profiles
+    )
+
+    # Integration accuracy: the derived exposure must equal the two model
+    # outputs it is composed from, to the cent.
+    recomputed = fused["predicted_next_quarter_revenue_usd"].clip(lower=0) * fused[
+        "churn_probability"
+    ]
+    consistent = int(
+        np.isclose(recomputed, fused["revenue_at_risk_usd"], atol=0.01).sum()
+    )
+
+    # Logical consistency: churn probability should fall as CRM health rises.
+    health_alignment = fused["churn_probability"].corr(
+        fused["Health_Score"], method="spearman"
+    )
+
+    high_risk = fused[fused["risk_level"] == "High"]
+    exposure_share = (
+        high_risk["revenue_at_risk_usd"].sum() / fused["revenue_at_risk_usd"].sum()
+        if len(high_risk)
+        else 0.0
+    )
+
+    quality = {
+        "profiles_generated": len(profiles),
+        "profile_completeness": round(complete / len(profiles), 4),
+        "required_blocks": list(REQUIRED_PROFILE_BLOCKS),
+        "grain_preserved": len(fused) == len(profiles),
+        "integration_accuracy": round(consistent / len(fused), 4),
+        "risk_health_alignment_spearman": round(float(health_alignment), 4),
+        "profiles_per_second": round(len(profiles) / max(elapsed_seconds, 1e-6), 1),
+        "high_risk_accounts": int(len(high_risk)),
+        "high_risk_share_of_accounts": round(len(high_risk) / len(fused), 4),
+        "high_risk_share_of_revenue_at_risk": round(float(exposure_share), 4),
+    }
+    logger.info(
+        "Fusion quality | completeness %.1f%% | integration %.1f%% | health alignment %.3f | %.0f profiles/s",
+        quality["profile_completeness"] * 100,
+        quality["integration_accuracy"] * 100,
+        quality["risk_health_alignment_spearman"],
+        quality["profiles_per_second"],
+    )
+    return quality
+
+
 def select_priority_accounts(profiles: list[dict], count: int) -> list[dict]:
     """Pick the accounts with the largest forecast revenue exposed to churn."""
     ranked = sorted(
@@ -414,6 +483,7 @@ def run_fusion() -> list[dict]:
     """Score all customers, fuse the outputs, and write the profile files."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    started = time.perf_counter()
 
     df = pd.read_csv(PROCESSED_FILE)
     logger.info("Loaded %s %s", PROCESSED_FILE.name, df.shape)
@@ -463,6 +533,10 @@ def run_fusion() -> list[dict]:
         "Total forecast revenue at risk: $%.0f",
         fused["revenue_at_risk_usd"].sum(),
     )
+
+    quality = assess_fusion_quality(profiles, fused, time.perf_counter() - started)
+    QUALITY_FILE.write_text(json.dumps(quality, indent=2), encoding="utf-8")
+    logger.info("Wrote fusion quality report to %s", QUALITY_FILE)
     return profiles
 
 
