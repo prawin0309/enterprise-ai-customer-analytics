@@ -38,8 +38,9 @@ business teams struggle to convert it into decisions. This project addresses fou
 ## Project Architecture
 
 ```
-D:\DS_FO\
+customer-intelligence/
 ├── src/
+│   ├── paths.py               # Repo-relative path resolution (no absolute paths)
 │   ├── preprocessing.py       # Load → join → clean → engineer → encode → SMOTE
 │   ├── train_models.py        # Churn classifier, revenue regressor, KMeans segmentation
 │   ├── fusion_layer.py        # Fuse model outputs into per-customer JSON profiles
@@ -76,7 +77,7 @@ D:\DS_FO\
 ### Data flow
 
 ```
-D:\DS_F (read-only source)
+CRM_DATA_DIR (read-only source extract)
         │
         ▼
   preprocessing.py ──────► processed_customer_data.csv
@@ -95,7 +96,9 @@ D:\DS_F (read-only source)
 
 ## Dataset
 
-Star-schema CRM extract read from `D:\DS_F` (treated as strictly read-only).
+Star-schema CRM extract, treated as strictly read-only. Its location is resolved by
+`src/paths.py` from the `CRM_DATA_DIR` environment variable — nothing in the codebase
+hard-codes an absolute path.
 
 | Table | Grain | Rows | Role |
 | --- | --- | --- | --- |
@@ -126,6 +129,19 @@ D:\DS_FO\.venv\Scripts\Activate.ps1
 pip install -r D:\DS_FO\requirements.txt
 ```
 
+### Source data location
+
+`src/paths.py` resolves the read-only CRM extract from `CRM_DATA_DIR`, falling back to
+`data/raw/` and a sibling `DS_F/` directory. Point it at the folder holding
+`fact_customers.csv`:
+
+```powershell
+setx CRM_DATA_DIR "D:\DS_F\DataSet-20260223T124234Z-1-001\DataSet"
+```
+
+Every writable path (`data/`, `models/`, `reports/`) is derived from the repository root,
+so the project runs unchanged from any checkout location.
+
 ### API key (LLM stage only)
 
 `llm_insights.py` reads the Gemini key from the environment — it is never hard-coded.
@@ -147,7 +163,7 @@ Run the stages in order — each consumes the previous stage's output.
 D:\DS_FO\.venv\Scripts\Activate.ps1
 
 python src\preprocessing.py      # ~15 s  → processed_customer_data.csv
-python src\train_models.py       # ~90 s  → 6 model artefacts + metrics
+python src\train_models.py       # ~3 min → 6 model artefacts + metrics (incl. search)
 python src\fusion_layer.py       # ~5 s   → 5,000 JSON intelligence profiles
 python src\llm_insights.py       # ~90 s  → executive_insights.md   (needs API key)
 python src\generate_report.py    # ~2 s   → Capstone_Final_Report.pdf
@@ -180,13 +196,19 @@ record-count features that encode the churn outcome (see
 
 | Metric | Value | Notes |
 | --- | --- | --- |
-| **ROC-AUC** | **0.9023** | Hold-out; the figure to quote |
-| **F1-score (churn class)** | **0.6020** | Minority-class balance |
-| Precision (churn) | 0.711 | Of flagged accounts, 71.1% do churn |
+| **ROC-AUC** | **0.9113** | Hold-out; the figure to quote |
+| **F1-score (churn class)** | **0.6146** | Minority-class balance |
+| Precision (churn) | 0.747 | Of flagged accounts, 74.7% do churn |
 | Recall (churn) | 0.522 | Catches 52.2% of actual churners |
-| Accuracy | 0.922 | Overall correctness |
-| **Cross-validated ROC-AUC** | **0.9032 ± 0.0152** | SMOTE refitted inside each fold |
+| Accuracy | 0.926 | Overall correctness |
+| **Cross-validated ROC-AUC** | **0.9080 ± 0.0103** | SMOTE refitted inside each fold |
 | GradientBoosting baseline ROC-AUC | 0.8689 | XGBoost selected |
+
+Hyperparameters come from `RandomizedSearchCV` (20 sampled configurations, 3-fold
+stratified CV, ROC-AUC scoring) run over the entire SMOTE + XGBoost pipeline, so
+resampling is refitted inside every search fold. Selected: `n_estimators=800`,
+`max_depth=6`, `learning_rate=0.08`, `subsample=0.9`, `colsample_bytree=1.0`,
+`min_child_weight=3`, `reg_lambda=1.0` (search score 0.9085).
 
 **Top SHAP churn drivers:** `Renewal_Risk_Flag_Low` · `txn_total_revenue_usd` ·
 `txn_total_billed_usd` · `txn_mean_revenue_usd` · `escalated_ticket_ratio`
@@ -208,11 +230,17 @@ The cost of this exclusion was measured, not assumed (`leakage_ablation` in
 
 | Variant | Features | ROC-AUC | F1 | Recall |
 | --- | --- | --- | --- | --- |
-| **Shipped model (leak-free)** | 180 | **0.9023** | **0.6020** | **0.5221** |
-| Contaminated variant (ablation only) | 184 | 0.9455 | 0.6881 | 0.6637 |
+| **Shipped model (leak-free)** | 180 | **0.9113** | **0.6146** | **0.5221** |
+| Contaminated variant (ablation only) | 184 | 0.9425 | 0.7032 | 0.6814 |
 
-The contaminated variant scores ~0.043 higher ROC-AUC partly by reading the outcome it is
+The contaminated variant scores ~0.031 higher ROC-AUC partly by reading the outcome it is
 meant to forecast. **Quote the leak-free numbers.**
+
+A second caveat sits alongside this one. `Renewal_Risk_Flag_Low` is the strongest SHAP
+driver and is itself a CRM-assigned risk rating, so the classifier is partly reproducing
+an existing human or rules-based judgement. It is populated before renewal and is
+therefore legitimate at prediction time, but the headline ROC-AUC should not be read as
+wholly independent evidence of new signal.
 
 ### Model 2 — Revenue Forecasting (GradientBoosting Regressor)
 
@@ -223,7 +251,13 @@ meant to forecast. **Quote the leak-free numbers.**
 | **R²** | **0.9674** |
 | Adjusted R² | 0.9600 |
 | Cross-validated R² | 0.9557 ± 0.0105 |
-| XGBoost alternative RMSE | $1,390.61 (R² 0.9661) |
+| Tuned XGBoost alternative RMSE | $1,378.95 (R² 0.9666) |
+| Untuned XGBoost alternative RMSE | $1,390.61 (R² 0.9661) |
+
+The XGBoost candidate was tuned by `RandomizedSearchCV` (20 configurations, 3-fold CV,
+R² scoring; best: `n_estimators=400`, `max_depth=4`, `learning_rate=0.02`,
+`subsample=0.8`, `colsample_bytree=0.7`, `reg_lambda=1.0`). GradientBoosting still wins
+on hold-out RMSE, so it is the shipped regressor.
 
 ### Model 3 — Behavioural Segmentation (KMeans + PCA)
 
@@ -234,24 +268,30 @@ meant to forecast. **Quote the leak-free numbers.**
 | Calinski-Harabasz | 2,723.4 | higher better | — |
 | Clusters selected (k) | 2 | — | Best across k = 2..10 |
 | PCA components | 6 | — | 90.7% variance retained |
+| Ward hierarchical silhouette (k=2) | 0.3832 | — | Cross-check; same partition |
+| DBSCAN silhouette (eps=1.0) | 0.6110 | — | Clears target, but drops 9.1% as noise |
 
 | Cluster | Label | Accounts | Mean MAU | Adoption | Avg Monthly Rev | Churn Rate |
 | --- | --- | --- | --- | --- | --- | --- |
 | 0 | Disengaged At-Risk Accounts | 1,401 | 46 | 30.2% | $576 | **30.0%** |
 | 1 | Loyal High-Value Accounts | 3,599 | 202 | 73.3% | $2,127 | **4.0%** |
 
-The silhouette target was **not** met — see [Known Limitations](#known-limitations). The
-segments remain commercially sharp: a 7.5× churn-rate gap between them.
+The silhouette target was **not** met — see [Known Limitations](#known-limitations). Ward
+hierarchical clustering reproduces the same partition, so the weak separation is a
+property of the data rather than a KMeans artefact. DBSCAN clears the threshold only by
+labelling 9.1% of accounts as noise — it declines to classify exactly the accounts sitting
+between the groups, which is the population Customer Success most needs an answer for. The
+shipped segments remain commercially sharp: a 7.5× churn-rate gap between them.
 
 ### Fused Portfolio View
 
 | Indicator | Value |
 | --- | --- |
 | Accounts profiled | 5,000 |
-| High-risk accounts | 516 |
-| Medium-risk accounts | 61 |
-| Low-risk accounts | 4,423 |
-| **Total forecast revenue at risk** | **$697,827** |
+| High-risk accounts | 521 |
+| Medium-risk accounts | 34 |
+| Low-risk accounts | 4,445 |
+| **Total forecast revenue at risk** | **$624,460** |
 
 ---
 
@@ -278,9 +318,10 @@ segments remain commercially sharp: a 7.5× churn-rate gap between them.
 
 ### 2. Training (`src/train_models.py`)
 
-Compares two algorithms per supervised task and sweeps k = 2..10 for clustering with
-silhouette / Davies-Bouldin / Calinski-Harabasz validation. Computes SHAP values via
-`TreeExplainer`.
+Tunes both supervised models with `RandomizedSearchCV`, compares each against at least one
+untuned baseline, and sweeps k = 2..10 for clustering with silhouette / Davies-Bouldin /
+Calinski-Harabasz validation plus Ward-hierarchical and DBSCAN cross-checks. Computes SHAP
+values via `TreeExplainer`.
 
 Cross-validation uses an `imblearn.pipeline.Pipeline` so **SMOTE is refitted inside every
 fold** on that fold's training portion only. Cross-validating a model already fitted on
@@ -328,7 +369,7 @@ recommendations with owner and timeframe, and renewal + upsell plays.
 | Processed dataset | `data/processed/processed_customer_data.csv` |
 | Intelligence profiles | `data/processed/customer_profiles.json` |
 | Serialised models | `models/*.pkl` |
-| Executed notebook (15 charts) | `notebooks/EDA_and_Modeling.ipynb` |
+| Executed notebook (16 charts) | `notebooks/EDA_and_Modeling.ipynb` |
 | Executive briefings | `reports/executive_insights.md` |
 | Capstone PDF report | `reports/Capstone_Final_Report.pdf` |
 | Metrics | `reports/model_metrics.json` |
@@ -342,24 +383,32 @@ recommendations with owner and timeframe, and renewal + upsell plays.
    scale with how long an account survived. A production rebuild should compute every feature
    from a fixed observation window that closes before the prediction date.
 
-2. **Recall ceiling.** The leak-free model catches 52.2% of churners at 71.1% precision.
+2. **Recall ceiling.** The leak-free model catches 52.2% of churners at 74.7% precision.
    Raising recall means lowering the decision threshold and accepting more false positives;
    the right operating point depends on the cost of a retention outreach versus a lost
    account. No threshold tuning was performed — the default 0.5 cut-off is used.
 
 3. **Silhouette target not met.** 0.3760 versus the 0.60 target. SaaS behavioural features
    are continuous and overlapping, so accounts form a gradient rather than separable spheres;
-   no k in 2..10 approached the target. Reducing to 2 PCA components would inflate the score
-   geometrically at the cost of business meaning — not done here.
+   no k in 2..10 approached the target, and Ward hierarchical clustering reproduces the same
+   partition. DBSCAN reaches 0.6110 only by discarding 9.1% of accounts as noise before the
+   score is computed. Soft or model-based clustering, which assigns membership probabilities
+   instead of hard labels, is the more promising direction. Reducing to 2 PCA components
+   would inflate the score geometrically at the cost of business meaning — not done here.
 
-4. **Negative quarterly revenue.** `quarterly_revenue_mean` reaches −$3,079 for some accounts
+4. **CRM risk flag as a predictor.** `Renewal_Risk_Flag_Low` dominates the SHAP ranking and
+   is a CRM-assigned rating rather than raw behaviour. It is available before renewal, so it
+   is not leakage, but part of the model's accuracy reflects an existing judgement rather
+   than newly discovered signal.
+
+5. **Negative quarterly revenue.** `quarterly_revenue_mean` reaches −$3,079 for some accounts
    (refunds and credits in the transaction table). Legitimate data, but it rules out naive log
    transformation of revenue.
 
-5. **Static snapshot.** The system scores a point-in-time extract. Production use requires
+6. **Static snapshot.** The system scores a point-in-time extract. Production use requires
    scheduled re-scoring, drift monitoring and retraining triggers.
 
-6. **Unvalidated LLM output.** Briefings are constrained by prompt design but not
+7. **Unvalidated LLM output.** Briefings are constrained by prompt design but not
    automatically fact-checked. A validator comparing generated figures against the source
    profile is the natural next step.
 

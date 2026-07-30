@@ -15,7 +15,7 @@
       "tenure_months": 3
     },
     "churn_prediction": {
-      "probability": 0.769,
+      "probability": 0.963,
       "risk_level": "High",
       "renewal_probability_crm": 0.78
     },
@@ -23,7 +23,7 @@
       "predicted_next_quarter_usd": 16040.46,
       "current_acv_usd": 54848,
       "lifetime_revenue_usd": 12155,
-      "revenue_at_risk_usd": 12334.8
+      "revenue_at_risk_usd": 15446.98
     },
     "segmentation": {
       "cluster_id": 1,
@@ -34,7 +34,7 @@
       "cluster_mean_feature_adoption_pct": 73.34
     },
     "intelligence_scores": {
-      "risk_score": 90.6,
+      "risk_score": 91.9,
       "revenue_potential_score": 88.5,
       "priority_score": 100.0,
       "engagement_level": "Moderate",
@@ -47,31 +47,31 @@
       {
         "feature": "Renewal_Risk_Flag_Low",
         "value": 1.0,
-        "shap_value": -1.1756,
+        "shap_value": -1.6916,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "txn_mean_revenue_usd",
         "value": 2719.5,
-        "shap_value": 0.6804,
+        "shap_value": 1.5764,
         "direction": "increases_churn_risk"
       },
       {
-        "feature": "Relative_Churn_Risk_Medium",
-        "value": 1.0,
-        "shap_value": -0.5755,
+        "feature": "txn_total_revenue_usd",
+        "value": 21756.0,
+        "shap_value": -1.162,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "txn_total_billed_usd",
+        "value": 22155.0,
+        "shap_value": -1.0789,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "escalated_ticket_ratio",
         "value": 0.0,
-        "shap_value": -0.5297,
-        "direction": "reduces_churn_risk"
-      },
-      {
-        "feature": "txn_mean_payment_delay_days",
-        "value": 1.0,
-        "shap_value": -0.4583,
+        "shap_value": -0.6668,
         "direction": "reduces_churn_risk"
       }
     ]
@@ -92,7 +92,7 @@
       "tenure_months": 59
     },
     "churn_prediction": {
-      "probability": 0.7675,
+      "probability": 0.9303,
       "risk_level": "High",
       "renewal_probability_crm": 0.84
     },
@@ -100,7 +100,7 @@
       "predicted_next_quarter_usd": 15926.51,
       "current_acv_usd": 56540,
       "lifetime_revenue_usd": 287628,
-      "revenue_at_risk_usd": 12224.26
+      "revenue_at_risk_usd": 14816.35
     },
     "segmentation": {
       "cluster_id": 1,
@@ -111,7 +111,7 @@
       "cluster_mean_feature_adoption_pct": 73.34
     },
     "intelligence_scores": {
-      "risk_score": 90.6,
+      "risk_score": 90.3,
       "revenue_potential_score": 88.5,
       "priority_score": 100.0,
       "engagement_level": "High",
@@ -122,33 +122,33 @@
     },
     "top_churn_drivers": [
       {
-        "feature": "Renewal_Risk_Flag_Low",
-        "value": 1.0,
-        "shap_value": -1.35,
-        "direction": "reduces_churn_risk"
-      },
-      {
         "feature": "txn_mean_revenue_usd",
         "value": 11684.3333,
-        "shap_value": 1.2407,
+        "shap_value": 2.095,
         "direction": "increases_churn_risk"
       },
       {
         "feature": "txn_failed_payment_rate",
         "value": 0.0,
-        "shap_value": 1.2154,
+        "shap_value": 1.9669,
         "direction": "increases_churn_risk"
       },
       {
-        "feature": "txn_total_billed_usd",
-        "value": 70690.0,
-        "shap_value": -0.9872,
+        "feature": "Renewal_Risk_Flag_Low",
+        "value": 1.0,
+        "shap_value": -1.9424,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "txn_total_revenue_usd",
         "value": 70106.0,
-        "shap_value": -0.962,
+        "shap_value": -1.915,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "txn_total_billed_usd",
+        "value": 70690.0,
+        "shap_value": -1.8116,
         "direction": "reduces_churn_risk"
       }
     ]
@@ -169,7 +169,7 @@
       "tenure_months": 7
     },
     "churn_prediction": {
-      "probability": 0.8727,
+      "probability": 0.9679,
       "risk_level": "High",
       "renewal_probability_crm": 0.68
     },
@@ -177,7 +177,7 @@
       "predicted_next_quarter_usd": 12224.07,
       "current_acv_usd": 40313,
       "lifetime_revenue_usd": 22958,
-      "revenue_at_risk_usd": 10667.62
+      "revenue_at_risk_usd": 11832.21
     },
     "segmentation": {
       "cluster_id": 1,
@@ -201,31 +201,31 @@
       {
         "feature": "txn_mean_revenue_usd",
         "value": 2148.2,
-        "shap_value": 1.4555,
+        "shap_value": 2.5913,
         "direction": "increases_churn_risk"
       },
       {
         "feature": "Renewal_Risk_Flag_Low",
         "value": 1.0,
-        "shap_value": -1.2374,
-        "direction": "reduces_churn_risk"
-      },
-      {
-        "feature": "Relative_Churn_Risk_Low",
-        "value": 1.0,
-        "shap_value": -0.4538,
+        "shap_value": -1.7841,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "SKU_CRM_Analytics",
         "value": 1.0,
-        "shap_value": -0.4422,
+        "shap_value": -0.5914,
+        "direction": "reduces_churn_risk"
+      },
+      {
+        "feature": "Relative_Churn_Risk_Low",
+        "value": 1.0,
+        "shap_value": -0.5757,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "txn_addon_revenue_usd",
         "value": 1626.0,
-        "shap_value": -0.276,
+        "shap_value": -0.3931,
         "direction": "reduces_churn_risk"
       }
     ]
@@ -246,7 +246,7 @@
       "tenure_months": 52
     },
     "churn_prediction": {
-      "probability": 0.8972,
+      "probability": 0.9719,
       "risk_level": "High",
       "renewal_probability_crm": 0.72
     },
@@ -254,7 +254,7 @@
       "predicted_next_quarter_usd": 10650.96,
       "current_acv_usd": 40253,
       "lifetime_revenue_usd": 160979,
-      "revenue_at_risk_usd": 9556.34
+      "revenue_at_risk_usd": 10351.25
     },
     "segmentation": {
       "cluster_id": 1,
@@ -265,7 +265,7 @@
       "cluster_mean_feature_adoption_pct": 73.34
     },
     "intelligence_scores": {
-      "risk_score": 93.1,
+      "risk_score": 93.0,
       "revenue_potential_score": 81.2,
       "priority_score": 99.9,
       "engagement_level": "Moderate",
@@ -276,34 +276,34 @@
     },
     "top_churn_drivers": [
       {
-        "feature": "Renewal_Risk_Flag_Low",
-        "value": 1.0,
-        "shap_value": -1.341,
-        "direction": "reduces_churn_risk"
-      },
-      {
         "feature": "txn_mean_revenue_usd",
         "value": 2357.8571,
-        "shap_value": 1.2325,
+        "shap_value": 2.2203,
         "direction": "increases_churn_risk"
       },
       {
-        "feature": "Relative_Churn_Risk_Medium",
+        "feature": "Renewal_Risk_Flag_Low",
         "value": 1.0,
-        "shap_value": -0.4777,
+        "shap_value": -1.8772,
         "direction": "reduces_churn_risk"
       },
       {
-        "feature": "Regulatory_Complexity_Low",
-        "value": 1.0,
-        "shap_value": -0.4366,
+        "feature": "txn_total_revenue_usd",
+        "value": 16505.0,
+        "shap_value": -1.0247,
         "direction": "reduces_churn_risk"
       },
       {
         "feature": "txn_failed_payment_rate",
         "value": 0.5714,
-        "shap_value": 0.3316,
+        "shap_value": 0.5079,
         "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "Relative_Churn_Risk_Medium",
+        "value": 1.0,
+        "shap_value": -0.5017,
+        "direction": "reduces_churn_risk"
       }
     ]
   },
@@ -323,7 +323,7 @@
       "tenure_months": 30
     },
     "churn_prediction": {
-      "probability": 0.9144,
+      "probability": 0.9832,
       "risk_level": "High",
       "renewal_probability_crm": 0.64
     },
@@ -331,7 +331,7 @@
       "predicted_next_quarter_usd": 9081.2,
       "current_acv_usd": 42033,
       "lifetime_revenue_usd": 109830,
-      "revenue_at_risk_usd": 8303.92
+      "revenue_at_risk_usd": 8928.78
     },
     "segmentation": {
       "cluster_id": 1,
@@ -342,7 +342,7 @@
       "cluster_mean_feature_adoption_pct": 73.34
     },
     "intelligence_scores": {
-      "risk_score": 94.0,
+      "risk_score": 95.2,
       "revenue_potential_score": 78.0,
       "priority_score": 99.9,
       "engagement_level": "Low",
@@ -355,31 +355,31 @@
       {
         "feature": "txn_mean_revenue_usd",
         "value": 8194.75,
-        "shap_value": 1.3793,
-        "direction": "increases_churn_risk"
-      },
-      {
-        "feature": "txn_failed_payment_rate",
-        "value": 0.0,
-        "shap_value": 1.1914,
+        "shap_value": 2.5912,
         "direction": "increases_churn_risk"
       },
       {
         "feature": "Renewal_Risk_Flag_Low",
         "value": 0.0,
-        "shap_value": 1.0777,
+        "shap_value": 2.062,
         "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "txn_failed_payment_rate",
+        "value": 0.0,
+        "shap_value": 1.522,
+        "direction": "increases_churn_risk"
+      },
+      {
+        "feature": "txn_total_revenue_usd",
+        "value": 32779.0,
+        "shap_value": -1.278,
+        "direction": "reduces_churn_risk"
       },
       {
         "feature": "usage_mean_license_utilization_pct",
         "value": 100.0,
-        "shap_value": -0.8889,
-        "direction": "reduces_churn_risk"
-      },
-      {
-        "feature": "Renewal_Risk_Flag_Medium",
-        "value": 1.0,
-        "shap_value": -0.778,
+        "shap_value": -1.1609,
         "direction": "reduces_churn_risk"
       }
     ]

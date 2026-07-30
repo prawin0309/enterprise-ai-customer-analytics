@@ -30,12 +30,24 @@ from sklearn.preprocessing import LabelEncoder
 # Configuration
 # --------------------------------------------------------------------------- #
 
-SOURCE_DIR = Path(r"D:\DS_F\DataSet-20260223T124234Z-1-001\DataSet")
-OUTPUT_DIR = Path(r"D:\DS_FO\data\processed")
+try:
+    from paths import (
+        PROCESSED_DIR as OUTPUT_DIR,
+        PROCESSED_FILE,
+        TEST_FILE,
+        TRAIN_BALANCED_FILE,
+        resolve_source_dir,
+    )
+except ImportError:  # imported as ``src.preprocessing``
+    from src.paths import (
+        PROCESSED_DIR as OUTPUT_DIR,
+        PROCESSED_FILE,
+        TEST_FILE,
+        TRAIN_BALANCED_FILE,
+        resolve_source_dir,
+    )
 
-PROCESSED_FILE = OUTPUT_DIR / "processed_customer_data.csv"
-TRAIN_BALANCED_FILE = OUTPUT_DIR / "train_balanced_smote.csv"
-TEST_FILE = OUTPUT_DIR / "test_holdout.csv"
+SOURCE_DIR = resolve_source_dir()
 
 CUSTOMER_KEY = "Customer_ID"
 CHURN_TARGET = "Churn"

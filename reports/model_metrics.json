@@ -1,11 +1,11 @@
 {
   "churn_classification": {
-    "roc_auc": 0.9022757430335924,
-    "f1_score": 0.6020408163265306,
-    "precision": 0.7108433734939759,
+    "roc_auc": 0.9112550009478105,
+    "f1_score": 0.6145833333333334,
+    "precision": 0.7468354430379747,
     "recall": 0.5221238938053098,
-    "cv_roc_auc_mean": 0.9032002762418545,
-    "cv_roc_auc_std": 0.01524963920482052,
+    "cv_roc_auc_mean": 0.9079740429970272,
+    "cv_roc_auc_std": 0.010331582975457155,
     "cv_method": "SMOTE inside imblearn Pipeline, refitted per fold",
     "n_features": 180,
     "excluded_temporal_artifacts": [
@@ -14,75 +14,108 @@
       "active_quarters",
       "usage_months_observed"
     ],
+    "hyperparameter_search": {
+      "method": "RandomizedSearchCV",
+      "candidates_sampled": 20,
+      "cv_folds": 3,
+      "scoring": "roc_auc",
+      "search_space": [
+        "model__colsample_bytree",
+        "model__learning_rate",
+        "model__max_depth",
+        "model__min_child_weight",
+        "model__n_estimators",
+        "model__reg_lambda",
+        "model__subsample"
+      ],
+      "best_params": {
+        "subsample": 0.9,
+        "reg_lambda": 1.0,
+        "n_estimators": 800,
+        "min_child_weight": 3,
+        "max_depth": 6,
+        "learning_rate": 0.08,
+        "colsample_bytree": 1.0
+      },
+      "best_search_score": 0.9084863294488569,
+      "default_params": {
+        "n_estimators": 400,
+        "max_depth": 5,
+        "learning_rate": 0.05,
+        "subsample": 0.9,
+        "colsample_bytree": 0.8,
+        "reg_lambda": 1.0
+      }
+    },
     "baseline_gb_roc_auc": 0.8688629266394629,
     "leakage_ablation": {
       "description": "Contaminated variant retaining record-count features that fall because a churned customer stops generating rows.",
       "n_features": 184,
-      "roc_auc": 0.9454859275074577,
-      "f1_score": 0.6880733944954128,
-      "recall": 0.6637168141592921,
-      "cv_roc_auc_mean": 0.9527925501728319
+      "roc_auc": 0.9425427263022419,
+      "f1_score": 0.7031963470319634,
+      "recall": 0.6814159292035398,
+      "cv_roc_auc_mean": 0.9505916758613473
     },
     "top_shap_drivers": [
       {
         "feature": "Renewal_Risk_Flag_Low",
-        "mean_abs_shap": 1.3744081258773804
+        "mean_abs_shap": 2.0758399963378906
       },
       {
         "feature": "txn_total_revenue_usd",
-        "mean_abs_shap": 0.7043882608413696
-      },
-      {
-        "feature": "txn_total_billed_usd",
-        "mean_abs_shap": 0.6566274762153625
+        "mean_abs_shap": 1.3827004432678223
       },
       {
         "feature": "txn_mean_revenue_usd",
-        "mean_abs_shap": 0.5814854502677917
+        "mean_abs_shap": 1.2321122884750366
       },
       {
-        "feature": "escalated_ticket_ratio",
-        "mean_abs_shap": 0.35967519879341125
+        "feature": "txn_total_billed_usd",
+        "mean_abs_shap": 1.1061369180679321
       },
       {
         "feature": "txn_mean_payment_delay_days",
-        "mean_abs_shap": 0.3192012906074524
+        "mean_abs_shap": 0.5492925047874451
       },
       {
-        "feature": "Relative_Churn_Risk_Medium",
-        "mean_abs_shap": 0.30986377596855164
-      },
-      {
-        "feature": "Relative_Churn_Risk_Low",
-        "mean_abs_shap": 0.2769378125667572
+        "feature": "escalated_ticket_ratio",
+        "mean_abs_shap": 0.48109033703804016
       },
       {
         "feature": "txn_failed_payment_rate",
-        "mean_abs_shap": 0.26496759057044983
+        "mean_abs_shap": 0.4311479926109314
       },
       {
         "feature": "usage_mean_license_utilization_pct",
-        "mean_abs_shap": 0.2586364448070526
+        "mean_abs_shap": 0.40180355310440063
+      },
+      {
+        "feature": "Relative_Churn_Risk_Medium",
+        "mean_abs_shap": 0.36505016684532166
       },
       {
         "feature": "txn_addon_revenue_usd",
-        "mean_abs_shap": 0.25617074966430664
-      },
-      {
-        "feature": "Business_Model_B2C",
-        "mean_abs_shap": 0.23361125588417053
+        "mean_abs_shap": 0.3465074300765991
       },
       {
         "feature": "Renewal_Risk_Flag_Medium",
-        "mean_abs_shap": 0.20644553005695343
+        "mean_abs_shap": 0.3444945812225342
       },
       {
-        "feature": "Escalated_Tickets",
-        "mean_abs_shap": 0.18979018926620483
+        "feature": "Relative_Churn_Risk_Low",
+        "mean_abs_shap": 0.3395691215991974
       },
       {
-        "feature": "txn_auto_renewal_rate",
-        "mean_abs_shap": 0.16843858361244202
+        "feature": "Avg_Session_Minutes",
+        "mean_abs_shap": 0.2825585603713989
+      },
+      {
+        "feature": "Base_Monthly_Price_USD",
+        "mean_abs_shap": 0.28043389320373535
+      },
+      {
+        "feature": "Business_Model_B2C",
+        "mean_abs_shap": 0.2665005028247833
       }
     ]
   },
@@ -95,7 +128,12 @@
     "cv_r2_mean": 0.9557450487686092,
     "cv_r2_std": 0.01048274192310381,
     "all_candidates": {
-      "xgboost": {
+      "xgboost_tuned": {
+        "rmse": 1378.9491923200071,
+        "mae": 654.8617553710938,
+        "r2": 0.9666412472724915
+      },
+      "xgboost_default": {
         "rmse": 1390.6072414596438,
         "mae": 653.2424926757812,
         "r2": 0.9660748243331909
@@ -105,6 +143,29 @@
         "mae": 692.3673714746251,
         "r2": 0.9673952649360784
       }
+    },
+    "hyperparameter_search": {
+      "method": "RandomizedSearchCV",
+      "candidates_sampled": 20,
+      "cv_folds": 3,
+      "scoring": "r2",
+      "search_space": [
+        "colsample_bytree",
+        "learning_rate",
+        "max_depth",
+        "n_estimators",
+        "reg_lambda",
+        "subsample"
+      ],
+      "best_params": {
+        "subsample": 0.8,
+        "reg_lambda": 1.0,
+        "n_estimators": 400,
+        "max_depth": 4,
+        "learning_rate": 0.02,
+        "colsample_bytree": 0.7
+      },
+      "best_search_score": 0.9604883392651876
     }
   },
   "segmentation": {
@@ -158,7 +219,7 @@
         "silhouette": 0.27150546907993284,
         "davies_bouldin": 1.2535471216255964,
         "calinski_harabasz": 2157.6109143084923,
-        "inertia": 16625.335171787912
+        "inertia": 16625.33517178791
       },
       {
         "k": 6,
@@ -193,8 +254,58 @@
         "silhouette": 0.25616218594538676,
         "davies_bouldin": 1.2746595025118546,
         "calinski_harabasz": 1655.7347816505328,
-        "inertia": 11376.673958190273
+        "inertia": 11376.673958190275
       }
-    ]
+    ],
+    "alternative_algorithms": {
+      "agglomerative_ward": {
+        "k": 2,
+        "silhouette": 0.38315651488927804,
+        "davies_bouldin": 1.1668781559119745
+      },
+      "dbscan_sweep": [
+        {
+          "eps": 0.5,
+          "clusters_found": 3,
+          "noise_rate": 0.7536
+        },
+        {
+          "eps": 0.75,
+          "clusters_found": 4,
+          "noise_rate": 0.3064,
+          "silhouette": 0.09258464834588297
+        },
+        {
+          "eps": 1.0,
+          "clusters_found": 2,
+          "noise_rate": 0.0912,
+          "silhouette": 0.6109757791190715
+        },
+        {
+          "eps": 1.25,
+          "clusters_found": 2,
+          "noise_rate": 0.0324,
+          "silhouette": 0.585918433766634
+        },
+        {
+          "eps": 1.5,
+          "clusters_found": 2,
+          "noise_rate": 0.015,
+          "silhouette": 0.5761231871423765
+        },
+        {
+          "eps": 2.0,
+          "clusters_found": 2,
+          "noise_rate": 0.0034,
+          "silhouette": 0.5268230189600295
+        }
+      ],
+      "dbscan_best": {
+        "eps": 1.0,
+        "clusters_found": 2,
+        "noise_rate": 0.0912,
+        "silhouette": 0.6109757791190715
+      }
+    }
   }
 }

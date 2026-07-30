@@ -32,15 +32,28 @@ from reportlab.platypus import (
 # Configuration
 # --------------------------------------------------------------------------- #
 
-PROJECT_DIR = Path(r"D:\DS_FO")
-REPORT_DIR = PROJECT_DIR / "reports"
-PROCESSED_DIR = PROJECT_DIR / "data" / "processed"
-
-METRICS_FILE = REPORT_DIR / "model_metrics.json"
-SHAP_FILE = REPORT_DIR / "shap_feature_importance.csv"
-FUSION_FILE = REPORT_DIR / "fusion_summary.csv"
-CLUSTER_FILE = REPORT_DIR / "cluster_profiles.csv"
-OUTPUT_FILE = REPORT_DIR / "Capstone_Final_Report.pdf"
+try:
+    from paths import (
+        CLUSTER_PROFILE_FILE as CLUSTER_FILE,
+        METRICS_FILE,
+        PDF_REPORT_FILE as OUTPUT_FILE,
+        PROCESSED_DIR,
+        PROJECT_DIR,
+        REPORT_DIR,
+        SHAP_IMPORTANCE_FILE as SHAP_FILE,
+        SUMMARY_FILE as FUSION_FILE,
+    )
+except ImportError:  # imported as ``src.generate_report``
+    from src.paths import (
+        CLUSTER_PROFILE_FILE as CLUSTER_FILE,
+        METRICS_FILE,
+        PDF_REPORT_FILE as OUTPUT_FILE,
+        PROCESSED_DIR,
+        PROJECT_DIR,
+        REPORT_DIR,
+        SHAP_IMPORTANCE_FILE as SHAP_FILE,
+        SUMMARY_FILE as FUSION_FILE,
+    )
 
 BRAND_COLOR = colors.HexColor("#1F4E79")
 ACCENT_COLOR = colors.HexColor("#2E75B6")
@@ -135,6 +148,11 @@ def build_styles() -> dict:
             spaceAfter=10,
         ),
     }
+
+
+def format_params(params: dict) -> str:
+    """Render a hyperparameter dict as a compact ``key=value`` list."""
+    return ", ".join(f"{key}={value}" for key, value in sorted(params.items()))
 
 
 def make_table(rows: list[list], styles: dict, widths: list[float]) -> Table:
@@ -413,6 +431,20 @@ def build_story(styles: dict, data: dict) -> list:
             [4.6 * cm, 3.4 * cm, 9.0 * cm],
         )
     )
+    search = churn["hyperparameter_search"]
+    story.append(
+        Paragraph(
+            f"Hyperparameters were selected by {search['method']} over "
+            f"{search['candidates_sampled']} sampled configurations with "
+            f"{search['cv_folds']}-fold stratified cross-validation, scoring "
+            "ROC-AUC. The search ran over the whole SMOTE + XGBoost pipeline, so "
+            "resampling was refitted inside every fold rather than applied once "
+            "beforehand. Best configuration: "
+            f"{format_params(search['best_params'])} (search score "
+            f"{search['best_search_score']:.4f}).",
+            styles["caption"],
+        )
+    )
     story.append(
         Paragraph(
             "The cross-validated figure is produced by an imbalanced-learn pipeline "
@@ -539,6 +571,19 @@ def build_story(styles: dict, data: dict) -> list:
         )
     )
 
+    revenue_search = revenue["hyperparameter_search"]
+    story.append(
+        Paragraph(
+            f"The XGBoost candidate was tuned by {revenue_search['method']} over "
+            f"{revenue_search['candidates_sampled']} sampled configurations "
+            f"({revenue_search['cv_folds']}-fold cross-validation, R\u00b2 "
+            "scoring) and compared against an untuned XGBoost and a "
+            "GradientBoosting baseline. Best configuration: "
+            f"{format_params(revenue_search['best_params'])}.",
+            styles["caption"],
+        )
+    )
+
     story.append(Paragraph("4.4 Behavioural segmentation", styles["subheading"]))
     story.append(
         make_table(
@@ -574,6 +619,38 @@ def build_story(styles: dict, data: dict) -> list:
             [4.0 * cm, 3.6 * cm, 9.4 * cm],
         )
     )
+    alternatives = segmentation.get("alternative_algorithms")
+    if alternatives:
+        agglomerative = alternatives["agglomerative_ward"]
+        dbscan_best = alternatives.get("dbscan_best")
+        if dbscan_best:
+            dbscan_text = (
+                f"DBSCAN peaked at silhouette {dbscan_best['silhouette']:.4f} "
+                f"(eps={dbscan_best['eps']}, "
+                f"{dbscan_best['clusters_found']} clusters, "
+                f"{dbscan_best['noise_rate']:.1%} of accounts labelled noise)"
+            )
+        else:
+            dbscan_text = (
+                "DBSCAN found no radius that produced two or more clusters while "
+                "keeping noise below half the dataset"
+            )
+        story.append(
+            Paragraph(
+                "<b>Cross-check against other algorithms.</b> Ward hierarchical "
+                "clustering at the same k scores silhouette "
+                f"{agglomerative['silhouette']:.4f} - effectively the same partition "
+                "as KMeans, so the weak separation is not a KMeans artefact. "
+                f"{dbscan_text}. DBSCAN scores higher only because silhouette is "
+                "computed after its noise points are discarded: it clears the "
+                "threshold by refusing to classify the accounts that sit between "
+                "the groups, which is exactly the population Customer Success needs "
+                "an answer for. A hard partition over every account remains the "
+                "right choice for this use case.",
+                styles["body"],
+            )
+        )
+
     story.append(
         Paragraph(
             "<b>Honest assessment:</b> the 0.60 silhouette target was not met. The best "
@@ -708,9 +785,20 @@ def build_story(styles: dict, data: dict) -> list:
         f"{churn['precision']:.1%} precision. Raising recall means lowering the "
         "decision threshold and accepting more false positives; the right operating "
         "point depends on the cost of a retention outreach versus a lost account.",
-        "<b>Segmentation separation.</b> Silhouette of 0.376 falls short of the 0.60 "
-        "target; density-based or model-based clustering may suit gradient-shaped "
-        "behavioural data better.",
+        "<b>Segmentation separation.</b> Silhouette of "
+        f"{segmentation['silhouette']:.3f} falls short of the "
+        f"{segmentation['silhouette_target']:.2f} target. Ward hierarchical "
+        "clustering reproduces it almost exactly, and DBSCAN only clears the "
+        "threshold by setting roughly a tenth of accounts aside as noise. Soft or "
+        "model-based clustering, which assigns membership probabilities instead of "
+        "hard labels, is the more promising direction for gradient-shaped "
+        "behavioural data.",
+        "<b>CRM risk flag as a predictor.</b> Renewal_Risk_Flag is the strongest "
+        "SHAP driver and is itself a CRM-assigned risk rating, so the classifier is "
+        "partly learning to reproduce an existing human or rules-based judgement. It "
+        "is populated before renewal and is therefore legitimate at prediction time, "
+        "but the headline ROC-AUC should not be read as wholly independent evidence "
+        "of new signal.",
         "<b>Static snapshot.</b> The system scores a point-in-time extract. Production "
         "deployment needs scheduled re-scoring, drift monitoring and retraining "
         "triggers.",

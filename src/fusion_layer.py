@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
 
 import joblib
 import numpy as np
@@ -27,15 +26,30 @@ import shap
 # Configuration
 # --------------------------------------------------------------------------- #
 
-SOURCE_DIR = Path(r"D:\DS_F\DataSet-20260223T124234Z-1-001\DataSet")
-PROCESSED_FILE = Path(r"D:\DS_FO\data\processed\processed_customer_data.csv")
-MODEL_DIR = Path(r"D:\DS_FO\models")
-OUTPUT_DIR = Path(r"D:\DS_FO\data\processed")
-REPORT_DIR = Path(r"D:\DS_FO\reports")
+try:
+    from paths import (
+        MODEL_DIR,
+        PRIORITY_FILE,
+        PROCESSED_DIR as OUTPUT_DIR,
+        PROCESSED_FILE,
+        PROFILES_FILE,
+        REPORT_DIR,
+        SUMMARY_FILE,
+        resolve_source_dir,
+    )
+except ImportError:  # imported as ``src.fusion_layer``
+    from src.paths import (
+        MODEL_DIR,
+        PRIORITY_FILE,
+        PROCESSED_DIR as OUTPUT_DIR,
+        PROCESSED_FILE,
+        PROFILES_FILE,
+        REPORT_DIR,
+        SUMMARY_FILE,
+        resolve_source_dir,
+    )
 
-PROFILES_FILE = OUTPUT_DIR / "customer_profiles.json"
-PRIORITY_FILE = OUTPUT_DIR / "priority_accounts.json"
-SUMMARY_FILE = REPORT_DIR / "fusion_summary.csv"
+SOURCE_DIR = resolve_source_dir()
 
 CUSTOMER_KEY = "Customer_ID"
 CHURN_TARGET = "Churn"

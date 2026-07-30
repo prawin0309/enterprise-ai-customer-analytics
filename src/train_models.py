@@ -6,8 +6,8 @@ Trains and serialises the three core models on the processed customer table:
     2. Revenue forecasting   - XGBoost / GradientBoosting regressor (RMSE, MAE, R2)
     3. Behavioural segments  - KMeans clustering (silhouette validated)
 
-Artefacts are written to ``D:\\DS_FO\\models`` and metric/importance reports to
-``D:\\DS_FO\\reports``.
+Model artefacts are written to ``models/`` and metric/importance reports to
+``reports/``; both are resolved relative to the repository root by ``paths``.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ import pandas as pd
 import shap
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
-from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN, AgglomerativeClustering, KMeans
 from sklearn.decomposition import PCA
 from sklearn.ensemble import GradientBoostingClassifier, GradientBoostingRegressor
 from sklearn.metrics import (
@@ -39,6 +39,7 @@ from sklearn.metrics import (
     silhouette_score,
 )
 from sklearn.model_selection import (
+    RandomizedSearchCV,
     StratifiedKFold,
     cross_val_score,
     train_test_split,
@@ -50,9 +51,10 @@ from xgboost import XGBClassifier, XGBRegressor
 # Configuration
 # --------------------------------------------------------------------------- #
 
-PROCESSED_FILE = Path(r"D:\DS_FO\data\processed\processed_customer_data.csv")
-MODEL_DIR = Path(r"D:\DS_FO\models")
-REPORT_DIR = Path(r"D:\DS_FO\reports")
+try:
+    from paths import MODEL_DIR, PROCESSED_FILE, REPORT_DIR
+except ImportError:  # imported as ``src.train_models``
+    from src.paths import MODEL_DIR, PROCESSED_FILE, REPORT_DIR
 
 CUSTOMER_KEY = "Customer_ID"
 CHURN_TARGET = "Churn"
@@ -64,6 +66,35 @@ CV_FOLDS = 5
 SHAP_SAMPLE_SIZE = 500
 SILHOUETTE_TARGET = 0.60
 CLUSTER_RANGE = range(2, 11)
+
+# Randomised search budget. Twenty candidates over three folds covers the
+# depth / learning-rate trade-off that matters most for boosted trees while
+# keeping a full retrain to a couple of minutes.
+SEARCH_ITERATIONS = 20
+SEARCH_CV_FOLDS = 3
+
+# Prefixed with ``model__`` because the search runs over the SMOTE pipeline.
+CLASSIFIER_SEARCH_SPACE = {
+    "model__n_estimators": [200, 300, 400, 600, 800],
+    "model__max_depth": [3, 4, 5, 6, 8],
+    "model__learning_rate": [0.02, 0.03, 0.05, 0.08, 0.12],
+    "model__subsample": [0.7, 0.8, 0.9, 1.0],
+    "model__colsample_bytree": [0.6, 0.7, 0.8, 1.0],
+    "model__reg_lambda": [0.5, 1.0, 2.0, 5.0],
+    "model__min_child_weight": [1, 3, 5, 10],
+}
+
+REGRESSOR_SEARCH_SPACE = {
+    "n_estimators": [300, 400, 600, 800],
+    "max_depth": [3, 4, 5, 6, 8],
+    "learning_rate": [0.02, 0.03, 0.05, 0.08, 0.12],
+    "subsample": [0.7, 0.8, 0.9, 1.0],
+    "colsample_bytree": [0.6, 0.7, 0.8, 1.0],
+    "reg_lambda": [0.5, 1.0, 2.0, 5.0],
+}
+
+# Neighbourhood radii probed when cross-checking KMeans against DBSCAN.
+DBSCAN_EPS_RANGE = (0.5, 0.75, 1.0, 1.25, 1.5, 2.0)
 
 # ``Cluster_Label`` is a pre-existing segment tag shipped with the source data
 # (values such as "At-Risk SMB") and encodes churn risk directly, so it is
@@ -141,7 +172,7 @@ def resolve_excluded_columns(
     return sorted(excluded)
 
 
-def build_churn_pipeline() -> ImbPipeline:
+def build_churn_pipeline(params: dict | None = None) -> ImbPipeline:
     """SMOTE + XGBoost as one estimator, so resampling happens inside each fold.
 
     Cross-validating a model that was fitted on pre-balanced data is optimistic:
@@ -151,24 +182,99 @@ def build_churn_pipeline() -> ImbPipeline:
     return ImbPipeline(
         [
             ("smote", SMOTE(random_state=RANDOM_STATE)),
-            ("model", build_classifier()),
+            ("model", build_classifier(params)),
         ]
     )
 
 
-def build_classifier() -> XGBClassifier:
-    """Return the tuned XGBoost churn classifier."""
+DEFAULT_CLASSIFIER_PARAMS = {
+    "n_estimators": 400,
+    "max_depth": 5,
+    "learning_rate": 0.05,
+    "subsample": 0.9,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 1.0,
+}
+
+
+def build_classifier(params: dict | None = None) -> XGBClassifier:
+    """Build the XGBoost churn classifier, overriding defaults with ``params``."""
+    settings = dict(DEFAULT_CLASSIFIER_PARAMS)
+    settings.update(params or {})
     return XGBClassifier(
-        n_estimators=400,
-        max_depth=5,
-        learning_rate=0.05,
-        subsample=0.9,
-        colsample_bytree=0.8,
-        reg_lambda=1.0,
+        **settings,
         eval_metric="logloss",
         random_state=RANDOM_STATE,
         n_jobs=-1,
     )
+
+
+def tune_classifier(
+    x_train: pd.DataFrame, y_train: pd.Series
+) -> tuple[dict, dict]:
+    """Randomised search over the SMOTE + XGBoost pipeline.
+
+    Searching the pipeline rather than the bare estimator keeps resampling
+    inside each validation fold, so the reported search score is not inflated
+    by synthetic rows leaking across the split.
+    """
+    search = RandomizedSearchCV(
+        build_churn_pipeline(),
+        CLASSIFIER_SEARCH_SPACE,
+        n_iter=SEARCH_ITERATIONS,
+        scoring="roc_auc",
+        cv=StratifiedKFold(
+            n_splits=SEARCH_CV_FOLDS, shuffle=True, random_state=RANDOM_STATE
+        ),
+        random_state=RANDOM_STATE,
+        n_jobs=-1,
+        refit=False,
+    )
+    search.fit(x_train, y_train)
+    best = {
+        key.removeprefix("model__"): value
+        for key, value in search.best_params_.items()
+    }
+    summary = {
+        "method": "RandomizedSearchCV",
+        "candidates_sampled": SEARCH_ITERATIONS,
+        "cv_folds": SEARCH_CV_FOLDS,
+        "scoring": "roc_auc",
+        "search_space": sorted(CLASSIFIER_SEARCH_SPACE),
+        "best_params": best,
+        "best_search_score": float(search.best_score_),
+        "default_params": DEFAULT_CLASSIFIER_PARAMS,
+    }
+    logger.info("Classifier search: best CV ROC-AUC=%.4f with %s",
+                search.best_score_, best)
+    return best, summary
+
+
+def tune_regressor(x_train: pd.DataFrame, y_train: pd.Series) -> tuple[dict, dict]:
+    """Randomised search for the XGBoost revenue regressor, scored on R²."""
+    search = RandomizedSearchCV(
+        XGBRegressor(random_state=RANDOM_STATE, n_jobs=-1),
+        REGRESSOR_SEARCH_SPACE,
+        n_iter=SEARCH_ITERATIONS,
+        scoring="r2",
+        cv=SEARCH_CV_FOLDS,
+        random_state=RANDOM_STATE,
+        n_jobs=-1,
+        refit=False,
+    )
+    search.fit(x_train, y_train)
+    summary = {
+        "method": "RandomizedSearchCV",
+        "candidates_sampled": SEARCH_ITERATIONS,
+        "cv_folds": SEARCH_CV_FOLDS,
+        "scoring": "r2",
+        "search_space": sorted(REGRESSOR_SEARCH_SPACE),
+        "best_params": dict(search.best_params_),
+        "best_search_score": float(search.best_score_),
+    }
+    logger.info("Regressor search: best CV R2=%.4f with %s",
+                search.best_score_, search.best_params_)
+    return dict(search.best_params_), summary
 
 
 def build_supervised_matrix(
@@ -210,7 +316,8 @@ def train_churn_classifier(df: pd.DataFrame) -> tuple[XGBClassifier, dict]:
         len(x_train_balanced),
     )
 
-    classifier = build_classifier()
+    best_params, search_summary = tune_classifier(x_train, y_train)
+    classifier = build_classifier(best_params)
     classifier.fit(x_train_balanced, y_train_balanced)
 
     probabilities = classifier.predict_proba(x_test)[:, 1]
@@ -219,7 +326,7 @@ def train_churn_classifier(df: pd.DataFrame) -> tuple[XGBClassifier, dict]:
     # Cross-validate the SMOTE+model pipeline on the UNBALANCED training split
     # so resampling is refitted inside every fold.
     honest_cv = cross_val_score(
-        build_churn_pipeline(),
+        build_churn_pipeline(best_params),
         x_train,
         y_train,
         cv=StratifiedKFold(
@@ -239,6 +346,7 @@ def train_churn_classifier(df: pd.DataFrame) -> tuple[XGBClassifier, dict]:
         "cv_method": "SMOTE inside imblearn Pipeline, refitted per fold",
         "n_features": int(features.shape[1]),
         "excluded_temporal_artifacts": TEMPORAL_ARTIFACT_FEATURES,
+        "hyperparameter_search": search_summary,
     }
 
     # Baseline comparison required by the project guidelines.
@@ -262,14 +370,14 @@ def train_churn_classifier(df: pd.DataFrame) -> tuple[XGBClassifier, dict]:
         classification_report(y_test, predictions, digits=3),
     )
 
-    metrics["leakage_ablation"] = run_leakage_ablation(df)
+    metrics["leakage_ablation"] = run_leakage_ablation(df, best_params)
 
     importance = compute_shap_importance(classifier, x_test)
     metrics["top_shap_drivers"] = importance.head(15).to_dict("records")
     return classifier, metrics
 
 
-def run_leakage_ablation(df: pd.DataFrame) -> dict:
+def run_leakage_ablation(df: pd.DataFrame, params: dict | None = None) -> dict:
     """Quantify what the temporal-artefact features were contributing.
 
     Retrains the classifier *with* the excluded features so the report can state
@@ -288,12 +396,12 @@ def run_leakage_ablation(df: pd.DataFrame) -> dict:
     x_balanced, y_balanced = SMOTE(random_state=RANDOM_STATE).fit_resample(
         x_train, y_train
     )
-    model = build_classifier()
+    model = build_classifier(params)
     model.fit(x_balanced, y_balanced)
     predictions = model.predict(x_test)
 
     honest_cv = cross_val_score(
-        build_churn_pipeline(), x_train, y_train,
+        build_churn_pipeline(params), x_train, y_train,
         cv=StratifiedKFold(n_splits=CV_FOLDS, shuffle=True,
                            random_state=RANDOM_STATE),
         scoring="roc_auc", n_jobs=-1,
@@ -361,8 +469,12 @@ def train_revenue_regressor(df: pd.DataFrame) -> tuple[object, dict]:
         features, target, test_size=TEST_SIZE, random_state=RANDOM_STATE
     )
 
+    tuned_params, search_summary = tune_regressor(x_train, y_train)
     candidates = {
-        "xgboost": XGBRegressor(
+        "xgboost_tuned": XGBRegressor(
+            **tuned_params, random_state=RANDOM_STATE, n_jobs=-1
+        ),
+        "xgboost_default": XGBRegressor(
             n_estimators=600,
             max_depth=5,
             learning_rate=0.05,
@@ -413,6 +525,7 @@ def train_revenue_regressor(df: pd.DataFrame) -> tuple[object, dict]:
         "cv_r2_mean": float(cv_r2.mean()),
         "cv_r2_std": float(cv_r2.std()),
         "all_candidates": results,
+        "hyperparameter_search": search_summary,
     }
     logger.info(
         "Selected %s | adjusted R2=%.4f | CV R2=%.4f (+/- %.4f)",
@@ -438,6 +551,56 @@ def prepare_segmentation_matrix(df: pd.DataFrame) -> tuple[np.ndarray, StandardS
     scaler = StandardScaler()
     scaled = scaler.fit_transform(segment_data)
     return scaled, scaler
+
+
+def validate_with_alternative_algorithms(reduced: np.ndarray, k: int) -> dict:
+    """Cross-check the KMeans partition against hierarchical and density methods.
+
+    Neither is used for the production segmentation; they exist to show whether
+    the weak silhouette is a KMeans artefact or a property of the data.
+    """
+    labels = AgglomerativeClustering(n_clusters=k, linkage="ward").fit_predict(
+        reduced
+    )
+    results: dict = {
+        "agglomerative_ward": {
+            "k": int(k),
+            "silhouette": float(silhouette_score(reduced, labels)),
+            "davies_bouldin": float(davies_bouldin_score(reduced, labels)),
+        },
+        "dbscan_sweep": [],
+    }
+
+    best_dbscan = None
+    for eps in DBSCAN_EPS_RANGE:
+        labels = DBSCAN(eps=eps, min_samples=10).fit_predict(reduced)
+        clusters = sorted(set(labels) - {-1})
+        noise_rate = float((labels == -1).mean())
+        record = {
+            "eps": eps,
+            "clusters_found": len(clusters),
+            "noise_rate": round(noise_rate, 4),
+        }
+        # Silhouette is undefined below two clusters and meaningless once most
+        # of the data has been labelled noise.
+        if len(clusters) >= 2 and noise_rate < 0.5:
+            mask = labels != -1
+            record["silhouette"] = float(
+                silhouette_score(reduced[mask], labels[mask])
+            )
+            if best_dbscan is None or (
+                record["silhouette"] > best_dbscan["silhouette"]
+            ):
+                best_dbscan = record
+        results["dbscan_sweep"].append(record)
+
+    results["dbscan_best"] = best_dbscan
+    logger.info(
+        "Cross-check | agglomerative silhouette=%.4f | best DBSCAN=%s",
+        results["agglomerative_ward"]["silhouette"],
+        best_dbscan,
+    )
+    return results
 
 
 def train_segmentation_model(
@@ -500,6 +663,9 @@ def train_segmentation_model(
         "pca_components": int(reduced.shape[1]),
         "features": SEGMENTATION_FEATURES,
         "sweep": sweep,
+        "alternative_algorithms": validate_with_alternative_algorithms(
+            reduced, best["k"]
+        ),
     }
     logger.info(
         "Selected k=%d | silhouette=%.4f (target %.2f: %s) | sizes=%s",

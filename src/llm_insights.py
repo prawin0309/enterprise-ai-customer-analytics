@@ -24,9 +24,14 @@ import google.generativeai as genai
 # Configuration
 # --------------------------------------------------------------------------- #
 
-PROFILES_FILE = Path(r"D:\DS_FO\data\processed\customer_profiles.json")
-PRIORITY_FILE = Path(r"D:\DS_FO\data\processed\priority_accounts.json")
-OUTPUT_FILE = Path(r"D:\DS_FO\reports\executive_insights.md")
+try:
+    from paths import INSIGHTS_FILE as OUTPUT_FILE, PRIORITY_FILE, PROFILES_FILE
+except ImportError:  # imported as ``src.llm_insights``
+    from src.paths import (
+        INSIGHTS_FILE as OUTPUT_FILE,
+        PRIORITY_FILE,
+        PROFILES_FILE,
+    )
 
 API_KEY_VARIABLES = ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY")
 
