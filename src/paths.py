@@ -3,13 +3,14 @@
 Every path used by the pipeline is derived from the repository root rather than
 hard-coded, so the project runs unchanged from any checkout location.
 
-The raw CRM extract lives outside the repository and is treated as read-only.
-Point at it with the ``CRM_DATA_DIR`` environment variable, e.g.
+The raw CRM extract ships with the repository under ``data/raw/`` and is
+treated as read-only, so the pipeline runs from a clean clone with no further
+setup. To point at an extract held elsewhere, set ``CRM_DATA_DIR``:
 
-    setx CRM_DATA_DIR "D:\\DS_F\\DataSet-20260223T124234Z-1-001\\DataSet"
+    setx CRM_DATA_DIR "C:\\path\\to\\DataSet"
 
 If the variable is unset, the first directory containing ``fact_customers.csv``
-from a small list of conventional locations is used.
+from a small list of repository-relative locations is used.
 """
 
 from __future__ import annotations
@@ -44,9 +45,8 @@ SOURCE_ENV_VAR = "CRM_DATA_DIR"
 SENTINEL_TABLE = "fact_customers.csv"
 
 _FALLBACK_SOURCE_DIRS = (
-    PROJECT_DIR / "data" / "raw",
+    DATA_DIR / "raw",
     PROJECT_DIR.parent / "DS_F" / "DataSet-20260223T124234Z-1-001" / "DataSet",
-    Path(r"D:\DS_F\DataSet-20260223T124234Z-1-001\DataSet"),
 )
 
 

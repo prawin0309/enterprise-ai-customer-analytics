@@ -1,14 +1,17 @@
-pandas
-numpy
-scikit-learn
-xgboost
-imbalanced-learn
-shap
-matplotlib
-seaborn
-joblib
-google-generativeai
-reportlab
-jupyter
-fastapi
-uvicorn
+# Pinned to the versions the committed models/*.pkl artefacts were trained
+# with. scikit-learn and xgboost in particular refuse to unpickle across
+# incompatible minor releases, so these floors are load-bearing.
+pandas>=3.0,<4.0
+numpy>=2.4,<3.0
+scikit-learn>=1.9,<2.0
+xgboost>=3.3,<4.0
+imbalanced-learn>=0.14,<0.15
+shap>=0.52,<0.53
+matplotlib>=3.11,<4.0
+seaborn>=0.13,<0.14
+joblib>=1.5,<2.0
+google-generativeai>=0.8,<0.9
+reportlab>=5.0,<6.0
+jupyter>=1.1,<2.0
+fastapi>=0.141,<1.0
+uvicorn>=0.52,<1.0

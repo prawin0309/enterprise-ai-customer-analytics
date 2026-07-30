@@ -1,0 +1,23 @@
+Industry_ID,Industry,Domain,Business_Model,Regulatory_Complexity,Sector,Relative_Churn_Risk,Weight
+1,Technology,SaaS / Software,B2B,High,Software,Low,12
+14,Media & Entertainment,Streaming & OTT,B2C,Medium,Media,High,4
+9,Retail,Brick & Mortar Retail,B2C,Low,Retail,High,4
+2,Financial Services,Banking & Capital Markets,B2B,Very High,Finance,Low,7
+16,Logistics,Supply Chain,B2B,Medium,Logistics,Medium,3
+6,Healthcare,Pharma & Life Sciences,B2B,Very High,Healthcare,Low,5
+21,Real Estate,PropTech,B2B,Medium,Real Estate,Medium,2
+12,Education,EdTech,B2C,Medium,Education,High,4
+4,Financial Services,Fintech & Payments,B2B,High,Finance,Medium,5
+5,Healthcare,Hospital & Clinics,B2B,High,Healthcare,Low,6
+18,Energy,Oil & Gas,B2B,High,Energy,Low,2
+13,Education,Higher Education,B2B,Low,Education,Medium,3
+19,Energy,Renewable Energy,B2B,Medium,Energy,Medium,2
+17,Logistics,Last-Mile Delivery,B2B,Low,Logistics,High,3
+3,Financial Services,Insurance,B2B,High,Finance,Medium,4
+10,Manufacturing,Automotive,B2B,High,Manufacturing,Medium,4
+22,Telecommunications,Telecom & ISP,B2B,High,Telecom,Medium,3
+8,Retail,E-Commerce,B2C,Medium,Retail,High,7
+11, Manufacturing  ,Industrial IoT,B2B,High,Manufacturing,Medium,3
+15,Media & Entertainment,Gaming,B2C,Low,Media,High,3
+20,Government,Public Sector,B2G,Low,Government,Low,2
+7,Healthcare,Health-Tech,B2B,High,Healthcare,Medium,4

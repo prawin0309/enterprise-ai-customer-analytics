@@ -1,0 +1,184 @@
+Geo_ID,Continent,Subregion,Country,ISO2,City,Currency,FX_Rate_To_USD,Market_Tier,GDP_Per_Capita_USD,SaaS_Maturity,Country_Weight
+20,South America,Brazil,Brazil,BR,Belo Horizonte,BRL,0.2,Tier2,9000,Medium,5
+43,Europe,Western Europe,France,FR,Marseille,EUR,1.09,Tier1,43000,Very High,5
+156,Asia Pacific,Southeast Asia,Thailand,TH,Bangkok,THB,0.028,Tier2,7500,Medium,2
+112,Middle East & Africa,Africa,Kenya,KE,Nairobi,KES,0.0077,Tier3,2100,Low,1
+148,Asia Pacific,East Asia,China,CN,Hangzhou,,0.14,Tier1,12500,High,4
+16,North America,Central America,Mexico,MX,Guadalajara,MXN,0.058,Tier2,11000,Medium,3
+25,South America,South America,Colombia,CO,Medellín,COP,0.00025,Tier3,7000,Low,2
+69,Europe,Northern Europe,Norway,NO,Oslo,NOK,0.095,Tier1,89000,Very High,1
+118,Middle East & Africa,Africa,Morocco,MA,Rabat,MAD,0.098,Tier3,3600,Low,1
+99,MIDDLE EAST & AFRICA,Middle East,Israel,IL,Tel Aviv,ILS,0.27,Tier1,54000,Very High,2
+98,Middle East & Africa,Middle East,Saudi Arabia,SA,Dammam,SAR,0.27,Tier2,24000,High,2
+162,Asia Pacific,Southeast Asia,Malaysia,MY,Kuala Lumpur,MYR,0.22,Tier2,12000,High,2
+70,Europe,Northern Europe,Norway,NO,Bergen,NOK,0.095,Tier1,89000,Very High,1
+174,Asia Pacific,South Asia,Pakistan,PK,Karachi,PKR,0.0036,Tier3,1600,Low,1
+46,Europe,Western Europe,Netherlands,NL,Rotterdam,EUR,1.09,Tier1,57000,Very High,3
+17,South America,Brazil,Brazil,BR,São Paulo,BRL,0.2,Tier2,9000,Medium,5
+52,Europe,Southern Europe,Spain,ES,Barcelona,EUR,1.09,Tier1,30000,High,3
+36,Europe,Western Europe,Germany,DE,Berlin,EUR,1.09,Tier1,50000,Very High,6
+83,Europe,Northern Europe,Finland,FI,Espoo,EUR,1.09,Tier1,50000,Very High,1
+57,Europe,Southern Europe,Italy,IT,Turin,EUR,1.09,Tier1,33000,High,3
+164,Asia Pacific,Southeast Asia,Malaysia,MY,Johor Bahru,MYR,0.22,Tier2,12000,High,2
+125,Asia Pacific,South Asia,India,IN,Chennai,INR,0.012,Tier2,2600,High,8
+146,Asia Pacific,East Asia,China,CN,Guangzhou,CNY,0.14,Tier1,12500,High,4
+31,Europe,Western Europe,United Kingdom,GB,London,GBP,1.27,Tier1,47000,Very High,7
+10,North America,Northern America,Canada,CA,Vancouver,CAD,0.74,Tier1,55000,Very High,5
+126,Asia Pacific,South Asia,India,IN,Kolkata,INR,0.012,Tier2,2600,High,8
+61,Europe,Western Europe,Switzerland,CH,Basel,CHF,1.13,Tier1,85000,Very High,2
+19,South America,Brazil,Brazil,BR,Brasília,BRL,0.2,Tier2,9000,Medium,5
+151,Asia Pacific,Southeast Asia,Indonesia,ID,Bandung,IDR,6.3e-05,Tier3,4800,Medium,2
+114,Middle East & Africa,Africa,Kenya,KE,Kisumu,KES,0.0077,Tier3,2100,Low,1
+76,Europe,Western Europe,Austria,AT,Graz,EUR,1.09,Tier1,51000,High,1
+56,Europe,Southern Europe,Italy,IT,Rome,EUR,1.09,Tier1,33000,High,3
+120,Asia Pacific,South Asia,India,IN,Bangalore,INR,0.012,Tier2,2600,High,8
+147,Asia Pacific,East Asia,China,CN,Chengdu,CNY,0.14,Tier1,12500,High,4
+67,Europe,Northern Europe,Denmark,DK,Copenhagen,DKK,0.147,Tier1,67000,Very High,1
+30,South America,South America,Peru,PE,Arequipa,PEN,0.27,Tier3,7500,Low,1
+175,Asia Pacific,South Asia,Pakistan,PK,Lahore,PKR,0.0036,Tier3,1600,Low,1
+66,Europe,Eastern Europe,Poland,PL,Gdańsk,PLN,0.25,Tier2,18000,High,2
+68,Europe,Northern Europe,Denmark,DK,Aarhus,DKK,0.147,Tier1,67000,Very High,1
+32,Europe,Western Europe,United Kingdom,GB,Manchester,GBP,1.27,Tier1,47000,Very High,7
+13,North America,Northern America,Canada,CA,Ottawa,CAD,0.74,Tier1,55000,Very High,5
+42,Europe,Western Europe,France,FR,Lyon,EUR,1.09,Tier1,43000,Very High,5
+129,Asia Pacific,East Asia,Japan,JP,Osaka,,0.0067,Tier1,34000,High,5
+91,Europe,Eastern Europe,Romania,RO,Cluj-Napoca,,0.22,Tier2,15000,Medium,1
+134,Asia Pacific,Oceania,Australia,AU,Melbourne,AUD,0.65,Tier1,59000,Very High,5
+105,Middle East & Africa,Africa,South Africa,ZA,Pretoria,ZAR,0.054,Tier2,7000,Medium,2
+110,Middle East & Africa,Africa,Nigeria,NG,Abuja,NGN,0.00065,Tier3,2200,Low,1
+39,Europe,Western Europe,Germany,DE,Hamburg,EUR,1.09,Tier1,50000,Very High,6
+121,Asia Pacific,South Asia,India,IN,Mumbai,INR,0.012,Tier2,2600,High,8
+97,Middle East & Africa,Middle East,Saudi Arabia,SA,Jeddah,SAR,0.27,Tier2,24000,High,2
+77,Europe,Western Europe,Austria,AT,Linz,EUR,1.09,Tier1,51000,High,1
+159,Asia Pacific,Southeast Asia,Vietnam,VN,Ho Chi Minh City,VND,4e-05,Tier3,4100,Medium,1
+3,North America,Northern America,United States,US,Chicago,USD,1.0,Tier1,80000,Very High,18
+133,Asia Pacific,Oceania,Australia,AU,Sydney,AUD,0.65,Tier1,59000,Very High,5
+47,Europe,Western Europe,Netherlands,NL,The Hague,EUR,1.09,Tier1,57000,Very High,3
+172,Asia Pacific,South Asia,Bangladesh,BD,Dhaka,BDT,0.0091,Tier3,2600,Low,1
+155,Asia Pacific,Southeast Asia,Philippines,PH,Davao,PHP,0.018,Tier3,3600,Medium,2
+86,Europe,Southern Europe,Portugal,PT,Braga,EUR,1.09,Tier1,24000,High,1
+167,ASIA PACIFIC,Oceania,New Zealand,NZ,Christchurch,NZD,0.61,Tier1,47000,Very High,1
+27,South America,South America,Chile,CL,Santiago,CLP,0.0011,Tier2,15000,Medium,1
+163,Asia Pacific,Southeast Asia,Malaysia,MY,Penang,MYR,0.22,Tier2,12000,High,2
+176,Asia Pacific,South Asia,Pakistan,PK,Islamabad,PKR,0.0036,Tier3,1600,Low,1
+116,Middle East & Africa,Middle East,Qatar,QA,Al Wakrah,QAR,0.27,Tier1,62000,High,1
+79,Europe,Northern Europe,Ireland,IE,Cork,EUR,1.09,Tier1,90000,Very High,1
+37,Europe,Western Europe,Germany,DE,Munich,EUR,1.09,Tier1,50000,Very High,6
+128,Asia Pacific,East Asia,Japan,JP,Tokyo,JPY,0.0067,Tier1,34000,High,5
+23,South America,South America,Argentina,AR,Rosario,ARS,0.0011,Tier3,12000,Medium,2
+109,Middle East & Africa,Africa,Nigeria,NG,,NGN,0.00065,Tier3,2200,Low,1
+123,Asia Pacific,South Asia,India,IN,Pune,INR,0.012,Tier2,2600,High,8
+115,Middle East & Africa,Middle East,Qatar,QA,Doha,QAR,0.27,Tier1,62000,High,1
+12,North America,Northern America,Canada,CA,Calgary,CAD,0.74,Tier1,55000,Very High,5
+103,Middle East & Africa,Africa,South Africa,ZA,,ZAR,0.054,Tier2,7000,Medium,2
+145,Asia Pacific,East Asia,China,CN,Shenzhen,CNY,0.14,Tier1,12500,High,4
+7,North America,Northern America,United States,US,,USD,1.0,Tier1,80000,Very High,18
+28,South America,South America,Chile,CL,Valparaíso,CLP,0.0011,Tier2,15000,Medium,1
+94,Middle East & Africa,Middle East,United Arab Emirates,AE,Abu Dhabi,AED,0.27,Tier1,43000,High,3
+5,North America,Northern America,United States,US,Boston,USD,1.0,Tier1,80000,Very High,18
+33,Europe,Western Europe,United Kingdom,GB,Edinburgh,GBP,1.27,Tier1,47000,Very High,7
+101,Middle East & Africa,Middle East,Israel,IL,Haifa,ILS,0.27,Tier1,54000,Very High,2
+149,Asia Pacific,Southeast Asia,Indonesia,ID,Jakarta,IDR,6.3e-05,Tier3,4800,Medium,2
+102,Middle East & Africa,Africa,South Africa,ZA,,,0.054,Tier2,7000,Medium,2
+136,Asia Pacific,Oceania,Australia,AU,Perth,AUD,0.65,Tier1,59000,Very High,5
+11,North America,Northern America,Canada,CA,Montreal,CAD,0.74,Tier1,55000,Very High,5
+119,Middle East & Africa,Africa,Morocco,MA,Marrakech,MAD,0.098,Tier3,3600,Low,1
+143,Asia Pacific,East Asia,China,CN,Shanghai,CNY,0.14,Tier1,12500,High,4
+1,North America,Northern America,United States,US,New York,USD,1.0,Tier1,80000,Very High,18
+139,Asia Pacific,East Asia,South Korea,KR,Seoul,KRW,0.00075,Tier1,33000,Very High,3
+71,Europe,Northern Europe,Norway,NO,Trondheim,NOK,0.095,Tier1,89000,Very High,1
+96,Middle East & Africa,Middle East,Saudi Arabia,SA,Riyadh,SAR,0.27,Tier2,24000,High,2
+65,Europe,Eastern Europe,Poland,PL,Wrocław,PLN,0.25,Tier2,18000,High,2
+45,Europe,Western Europe,Netherlands,NL,Amsterdam,EUR,1.09,Tier1,57000,Very High,3
+169,Asia Pacific,East Asia,Taiwan,TW,Taipei,TWD,0.032,Tier1,32000,High,1
+29,south america,South America,Peru,PE,Lima,PEN,0.27,Tier3,7500,Low,1
+41,Europe,Western Europe,France,FR,Paris,,1.09,Tier1,43000,Very High,5
+141,Asia Pacific,East Asia,South Korea,KR,Incheon,KRW,0.00075,Tier1,33000,Very High,3
+142,Asia Pacific,East Asia,South Korea,KR,Daegu,KRW,0.00075,Tier1,33000,Very High,3
+26,South America,South America,Colombia,CO,Cali,COP,0.00025,Tier3,7000,Low,2
+24,South America,South America,Colombia,CO,Bogotá,COP,0.00025,Tier3,7000,Low,2
+137,Asia Pacific,Oceania,Australia,AU,Adelaide,AUD,0.65,Tier1,59000,Very High,5
+82,Europe,Northern Europe,Finland,FI,Tampere,EUR,1.09,Tier1,50000,Very High,1
+80,Europe,Northern Europe,Ireland,IE,Limerick,EUR,1.09,Tier1,90000,Very High,1
+85,Europe,Southern Europe,Portugal,PT,,EUR,1.09,Tier1,24000,High,1
+40,Europe,Western Europe,Germany,DE,Düsseldorf,EUR,1.09,Tier1,50000,Very High,6
+113,Middle East & Africa,Africa,Kenya,KE,Mombasa,,0.0077,Tier3,2100,Low,1
+87,Europe,Eastern Europe,Czech Republic,CZ,Prague,CZK,0.044,Tier2,26000,High,1
+78,Europe,Northern Europe,Ireland,IE,Dublin,EUR,1.09,Tier1,90000,Very High,1
+178,Asia Pacific,Southeast Asia,Sri Lanka,LK,Kandy,LKR,0.0031,Tier3,3800,Low,1
+154,Asia Pacific,Southeast Asia,Philippines,PH,Cebu,PHP,0.018,Tier3,3600,Medium,2
+48,Europe,Northern Europe,Sweden,SE,Stockholm,SEK,0.096,Tier1,56000,Very High,2
+95,Middle East & Africa,Middle East,United Arab Emirates,AE,Sharjah,AED,0.27,Tier1,43000,High,3
+140,Asia Pacific,East Asia,South Korea,KR,Busan,KRW,0.00075,Tier1,33000,Very High,3
+171,Asia Pacific,East Asia,Taiwan,TW,Taichung,TWD,0.032,Tier1,32000,High,1
+62,Europe,Western Europe,Switzerland,CH,Bern,CHF,1.13,Tier1,85000,Very High,2
+74,Europe,Western Europe,Belgium,BE,,EUR,1.09,Tier1,46000,High,1
+34,Europe,Western Europe,United Kingdom,GB,Birmingham,GBP,1.27,Tier1,47000,Very High,7
+44,Europe,Western Europe,France,FR,Bordeaux,EUR,1.09,Tier1,43000,Very High,5
+138,Asia Pacific,Southeast Asia,Singapore,SG,Singapore,SGD,0.74,Tier1,65000,Very High,4
+144,Asia Pacific,East Asia,China,CN,Beijing,CNY,0.14,Tier1,12500,High,4
+63,Europe,Eastern Europe,Poland,PL,Warsaw,PLN,0.25,Tier2,18000,High,2
+15,North America,Central America,Mexico,MX,,MXN,0.058,Tier2,11000,Medium,3
+124,Asia Pacific,South Asia,India,IN,Delhi,INR,0.012,Tier2,2600,High,8
+127,Asia Pacific,South Asia,India,IN,Ahmedabad,INR,0.012,Tier2,2600,High,8
+106,Middle East & Africa,Africa,Egypt,EG,Cairo,EGP,0.032,Tier3,4000,Low,1
+54,Europe,Southern Europe,Spain,ES,Seville,EUR,1.09,Tier1,30000,High,3
+6,North America,Northern America,United States,US,Seattle,USD,1.0,Tier1,80000,Very High,18
+165,Asia Pacific,Oceania,New Zealand,NZ,,NZD,0.61,Tier1,47000,Very High,1
+4,North America,Northern America,United States,US,,USD,1.0,Tier1,80000,Very High,18
+170,Asia Pacific,East Asia,Taiwan,TW,,TWD,0.032,Tier1,32000,High,1
+50,Europe,Northern Europe,Sweden,SE,Malmö,SEK,0.096,Tier1,56000,Very High,2
+81,Europe,Northern Europe,Finland,FI,Helsinki,EUR,1.09,Tier1,50000,Very High,1
+35,Europe,Western Europe,United Kingdom,GB,Bristol,GBP,1.27,Tier1,47000,Very High,7
+8,North America,Northern America,United States,US,Atlanta,USD,1.0,Tier1,80000,Very High,18
+111,Middle East & Africa,Africa,Nigeria,NG,Port Harcourt,NGN,0.00065,Tier3,2200,Low,1
+92,Europe,Eastern Europe,Romania,RO,Timișoara,RON,0.22,Tier2,15000,Medium,1
+84,Europe,Southern Europe,Portugal,PT,Lisbon,EUR,1.09,Tier1,24000,High,1
+161,Asia Pacific,Southeast Asia,Vietnam,VN,Da Nang,VND,4e-05,Tier3,4100,Medium,1
+166,Asia Pacific,Oceania,New Zealand,NZ,Wellington,NZD,0.61,Tier1,47000,Very High,1
+90,Europe,Eastern Europe,Romania,RO,Bucharest,RON,0.22,Tier2,15000,Medium,1
+9,North America,Northern America,Canada,CA,Toronto,CAD,0.74,Tier1,55000,Very High,5
+14,North America,Central America,Mexico,MX,Mexico City,MXN,0.058,Tier2,11000,Medium,3
+60,Europe,Western Europe,Switzerland,CH,Geneva,CHF,1.13,Tier1,85000,Very High,2
+157,Asia Pacific,Southeast Asia,Thailand,TH,Chiang Mai,THB,0.028,Tier2,7500,Medium,2
+132,Asia Pacific,East Asia,Japan,JP,Fukuoka,,0.0067,Tier1,34000,High,5
+18,South America,Brazil,Brazil,BR,Rio de Janeiro,BRL,0.2,Tier2,9000,Medium,5
+73,Europe,Western Europe,Belgium,BE,Antwerp,EUR,1.09,Tier1,46000,High,1
+160,Asia Pacific,Southeast Asia,Vietnam,VN,Hanoi,VND,4e-05,Tier3,4100,Medium,1
+135,Asia Pacific,Oceania,Australia,AU,Brisbane,AUD,0.65,Tier1,59000,Very High,5
+153,Asia Pacific,Southeast Asia,Philippines,PH,Manila,PHP,0.018,Tier3,3600,Medium,2
+168,Asia Pacific,East Asia,Hong Kong,HK,Hong Kong,HKD,0.128,Tier1,49000,Very High,1
+64,Europe,Eastern Europe,Poland,PL,,PLN,0.25,Tier2,18000,High,2
+55,Europe,Southern Europe,Italy,IT,Milan,,1.09,Tier1,33000,High,3
+108,Middle East & Africa,Africa,Egypt,EG,Giza,EGP,0.032,Tier3,4000,Low,1
+51,Europe,Southern Europe,Spain,ES,Madrid,EUR,1.09,Tier1,30000,High,3
+107,Middle East & Africa,Africa,Egypt,EG,Alexandria,EGP,0.032,Tier3,4000,Low,1
+59,Europe,Western Europe,Switzerland,CH,Zurich,CHF,1.13,Tier1,85000,Very High,2
+49,Europe,Northern Europe,Sweden,SE,Gothenburg,SEK,0.096,Tier1,56000,Very High,2
+89,Europe,Eastern Europe,Czech Republic,CZ,Ostrava,CZK,0.044,Tier2,26000,High,1
+22,South America,South America,Argentina,AR,Córdoba,ARS,0.0011,Tier3,12000,Medium,2
+58,Europe,Southern Europe,Italy,IT,Florence,EUR,1.09,Tier1,33000,High,3
+177,Asia Pacific,Southeast Asia,Sri Lanka,LK,Colombo,LKR,0.0031,Tier3,3800,Low,1
+130,Asia Pacific,East Asia,Japan,JP,Nagoya,JPY,0.0067,Tier1,34000,High,5
+38,Europe,Western Europe,Germany,DE,Frankfurt,,1.09,Tier1,50000,Very High,6
+158,Asia Pacific,Southeast Asia,Thailand,TH,Phuket,THB,0.028,Tier2,7500,Medium,2
+173,Asia Pacific,South Asia,Bangladesh,BD,Chittagong,BDT,0.0091,Tier3,2600,Low,1
+2,North America,Northern America,United States,US,San Francisco,USD,1.0,Tier1,80000,Very High,18
+53,Europe,Southern Europe,Spain,ES,Valencia,EUR,1.09,Tier1,30000,High,3
+150,Asia Pacific,Southeast Asia,Indonesia,ID,Surabaya,IDR,6.3e-05,Tier3,4800,Medium,2
+131,Asia Pacific,East Asia,Japan,JP,Yokohama,JPY,0.0067,Tier1,34000,High,5
+152,asia pacific,Southeast Asia,Indonesia,ID,Medan,IDR,6.3e-05,Tier3,4800,Medium,2
+104,Middle East & Africa,Africa,South Africa,ZA,,ZAR,0.054,Tier2,7000,Medium,2
+100,middle east & africa,Middle East,Israel,IL,Jerusalem,ILS,0.27,Tier1,54000,Very High,2
+117,Middle East & Africa,Africa,Morocco,MA,Casablanca,MAD,0.098,Tier3,3600,Low,1
+88,Europe,Eastern Europe,Czech Republic,CZ,Brno,CZK,0.044,Tier2,26000,High,1
+75,Europe,Western Europe,Austria,AT,Vienna,EUR,1.09,Tier1,51000,High,1
+122,Asia Pacific,South Asia,India,IN,Hyderabad,INR,0.012,Tier2,2600,High,8
+72,Europe,Western Europe,Belgium,BE,Brussels,EUR,1.09,Tier1,46000,High,1
+21,South America,South America,Argentina,AR,Buenos Aires,ARS,0.0011,Tier3,12000,Medium,2
+72,Europe,Western Europe,Belgium,BE,Brussels,EUR,1.09,Tier1,46000,High,1
+107,Middle East & Africa,Africa,Egypt,EG,Alexandria,EGP,0.032,Tier3,4000,Low,1
+15,North America,Central America,Mexico,MX,Monterrey,MXN,0.058,Tier2,11000,Medium,3
+93,Middle East & Africa,Middle East,United Arab Emirates,AE,Dubai,AED,0.27,Tier1,43000,High,3
+93,Middle East & Africa,Middle East,United Arab Emirates,AE,Dubai,AED,0.27,Tier1,43000,High,3
+103,Middle East & Africa,Africa,South Africa,ZA,Cape Town,ZAR,0.054,Tier2,7000,Medium,2

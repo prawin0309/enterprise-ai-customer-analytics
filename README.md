@@ -111,8 +111,9 @@ CRM_DATA_DIR (read-only source extract)
 ## Dataset
 
 Star-schema CRM extract, treated as strictly read-only. Its location is resolved by
-`src/paths.py` from the `CRM_DATA_DIR` environment variable — nothing in the codebase
-hard-codes an absolute path.
+`src/paths.py`. The extract is committed under `data/raw/` and can be redirected with
+the `CRM_DATA_DIR` environment variable — nothing in the codebase hard-codes an
+absolute path.
 
 | Table | Grain | Rows | Role |
 | --- | --- | --- | --- |
@@ -163,7 +164,7 @@ hard-codes an absolute path.
 * `src/train_models.py` — tuned classifier, regressor and segmentation models
 * `src/fusion_layer.py` — unified customer profiles in JSON
 * `src/llm_insights.py` — Gemini-generated executive briefings with a factuality audit
-* `src/scoring_api.py` — FastAPI service for live scoring
+* `src/api.py` — FastAPI service for live scoring
 * `models/*.pkl` — persisted, deployment-ready artefacts
 * `reports/` — metrics, figures, fusion quality and the generated briefings
 
@@ -174,26 +175,32 @@ hard-codes an absolute path.
 Requires **Python 3.13** (3.14 lacks wheels for some dependencies) and Git.
 
 ```powershell
-# 1. Create the virtual environment
-py -3.13 -m venv D:\DS_FO\.venv
+# 1. Clone and enter the repository
+git clone https://github.com/prawin0309/enterprise-ai-customer-analytics.git
+cd enterprise-ai-customer-analytics
 
-# 2. Activate it
-D:\DS_FO\.venv\Scripts\Activate.ps1
+# 2. Create the virtual environment
+py -3.13 -m venv .venv
 
-# 3. Install dependencies
-pip install -r D:\DS_FO\requirements.txt
+# 3. Activate it
+.\.venv\Scripts\Activate.ps1
+
+# 4. Install dependencies
+pip install -r requirements.txt
 ```
 
 ### Source data location
 
-`src/paths.py` resolves the read-only CRM extract from `CRM_DATA_DIR`, falling back to
-`data/raw/` and a sibling `DS_F/` directory. Point it at the folder holding
-`fact_customers.csv`:
+The read-only CRM extract is committed to **`data/raw/`** (7 CSVs, 29 MB), so the
+pipeline runs from a clean clone with no additional downloads or configuration.
+
+To run against an extract held elsewhere, override the location:
 
 ```powershell
-setx CRM_DATA_DIR "D:\DS_F\DataSet-20260223T124234Z-1-001\DataSet"
+setx CRM_DATA_DIR "C:\path\to\DataSet"
 ```
 
+`src/paths.py` honours `CRM_DATA_DIR` first and otherwise falls back to `data/raw/`.
 Every writable path (`data/`, `models/`, `reports/`) is derived from the repository root,
 so the project runs unchanged from any checkout location.
 
@@ -215,7 +222,7 @@ Restart the shell afterwards so the variable is visible. Get a key at
 Run the stages in order — each consumes the previous stage's output.
 
 ```powershell
-D:\DS_FO\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 
 python src\preprocessing.py      # ~15 s  → processed_customer_data.csv
 python src\train_models.py       # ~3 min → 6 model artefacts + metrics (incl. search)
