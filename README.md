@@ -45,7 +45,9 @@ customer-intelligence/
 │   ├── train_models.py        # Churn classifier, revenue regressor, KMeans segmentation
 │   ├── fusion_layer.py        # Fuse model outputs into per-customer JSON profiles
 │   ├── llm_insights.py        # Gemini-generated executive briefings
-│   └── generate_report.py     # ReportLab capstone PDF
+│   ├── make_figures.py        # Report figures (ROC, SHAP, residuals, clusters)
+│   ├── generate_report.py     # ReportLab capstone PDF
+│   └── api.py                 # FastAPI scoring service
 ├── data/
 │   └── processed/
 │       ├── processed_customer_data.csv    # 5,000 × 190 modelling table
@@ -69,6 +71,9 @@ customer-intelligence/
 │   ├── shap_feature_importance.csv        # Global churn drivers
 │   ├── clustering_sweep.csv               # k = 2..10 validation sweep
 │   ├── cluster_profiles.csv               # Segment behavioural means
+│   ├── fusion_quality.json                # Profiling-layer validation
+│   ├── insight_audit.json                 # LLM currency-figure audit
+│   ├── figures/                           # PNGs embedded in the PDF
 │   └── fusion_summary.csv                 # Flat per-account scoring table
 ├── requirements.txt
 └── README.md
@@ -88,8 +93,10 @@ CRM_DATA_DIR (read-only source extract)
         ▼
   fusion_layer.py ───────► customer_profiles.json (churn + revenue + cluster + SHAP)
         │
-        ├──► llm_insights.py ─────► executive_insights.md
-        └──► generate_report.py ──► Capstone_Final_Report.pdf
+        ├──► llm_insights.py ─────► executive_insights.md + insight_audit.json
+        ├──► make_figures.py ─────► reports/figures/*.png
+        ├──► generate_report.py ──► Capstone_Final_Report.pdf
+        └──► api.py ──────────────► on-demand scoring endpoint
 ```
 
 ---
@@ -165,9 +172,37 @@ D:\DS_FO\.venv\Scripts\Activate.ps1
 python src\preprocessing.py      # ~15 s  → processed_customer_data.csv
 python src\train_models.py       # ~3 min → 6 model artefacts + metrics (incl. search)
 python src\fusion_layer.py       # ~5 s   → 5,000 JSON intelligence profiles
-python src\llm_insights.py       # ~90 s  → executive_insights.md   (needs API key)
-python src\generate_report.py    # ~2 s   → Capstone_Final_Report.pdf
+python src\llm_insights.py       # ~90 s  → executive_insights.md + insight_audit.json
+python src\make_figures.py       # ~5 s   → 5 PNGs in reports/figures/
+python src\generate_report.py    # ~3 s   → Capstone_Final_Report.pdf (9 pages, 5 figures)
 ```
+
+`llm_insights.py` needs `GEMINI_API_KEY`. `generate_report.py` degrades to a tables-only
+document if `make_figures.py` has not been run, rather than failing.
+
+### Scoring API
+
+`src/api.py` serves the same three models for a single account on demand. It loads the
+`.pkl` artefacts and the processed feature table at start-up and does not need the raw CRM
+extract.
+
+```powershell
+uvicorn src.api:app --reload
+curl http://127.0.0.1:8000/customers/12908/score
+```
+
+```json
+{
+  "customer_id": 12908,
+  "churn_probability": 0.9303,
+  "risk_level": "High",
+  "predicted_next_quarter_revenue_usd": 15926.51,
+  "revenue_at_risk_usd": 14816.35,
+  "cluster_id": 1
+}
+```
+
+Interactive docs at `/docs`; readiness probe at `/health`.
 
 Re-execute the notebook:
 
@@ -283,6 +318,35 @@ labelling 9.1% of accounts as noise — it declines to classify exactly the acco
 between the groups, which is the population Customer Success most needs an answer for. The
 shipped segments remain commercially sharp: a 7.5× churn-rate gap between them.
 
+### Fusion Layer Validation
+
+Measured by `assess_fusion_quality()` and written to `reports/fusion_quality.json`.
+
+| Criterion | Measure | Result |
+| --- | --- | --- |
+| Data integrity | Profile completeness | **100%** of 5,000 profiles carry all six blocks |
+| Integration accuracy | Model output consistency | **100%** — revenue at risk reconciles to forecast × churn probability |
+| Logical consistency | Risk vs CRM health | Spearman **−0.522** — churn risk falls as health rises |
+| Grain preservation | One profile per customer | Yes |
+| Scalability | Generation rate | ~2,400 profiles/second, single process |
+| Business utility | Account prioritisation | **10.4%** of accounts carry **88.0%** of total revenue at risk |
+
+### LLM Factuality Audit
+
+`audit_briefing()` checks every currency figure in every briefing against the source
+profile, accepting monthly / quarterly / annual restatements, `k` and `m` shorthand, and
+rounding within 1%. Written to `reports/insight_audit.json`.
+
+| Measure | Result |
+| --- | --- |
+| Briefings fully traceable | **5 of 5** |
+| Currency figures quoted | 53 |
+| Figures flagged for review | **0** |
+
+A flagged figure would be a review candidate, not proof of fabrication — the model may
+legitimately combine two profile values. The check covers currency only; percentages,
+dates and reasoning are not verified.
+
 ### Fused Portfolio View
 
 | Indicator | Value |
@@ -371,8 +435,12 @@ recommendations with owner and timeframe, and renewal + upsell plays.
 | Serialised models | `models/*.pkl` |
 | Executed notebook (16 charts) | `notebooks/EDA_and_Modeling.ipynb` |
 | Executive briefings | `reports/executive_insights.md` |
-| Capstone PDF report | `reports/Capstone_Final_Report.pdf` |
+| Capstone PDF report (9 pages, 5 figures) | `reports/Capstone_Final_Report.pdf` |
+| Report figures | `reports/figures/*.png` |
 | Metrics | `reports/model_metrics.json` |
+| Fusion layer validation | `reports/fusion_quality.json` |
+| LLM factuality audit | `reports/insight_audit.json` |
+| Scoring API | `src/api.py` |
 
 ---
 
@@ -408,13 +476,15 @@ recommendations with owner and timeframe, and renewal + upsell plays.
 6. **Static snapshot.** The system scores a point-in-time extract. Production use requires
    scheduled re-scoring, drift monitoring and retraining triggers.
 
-7. **Unvalidated LLM output.** Briefings are constrained by prompt design but not
-   automatically fact-checked. A validator comparing generated figures against the source
-   profile is the natural next step.
+7. **Partial LLM validation.** The factuality audit checks currency figures only.
+   Percentages, dates, named roles and the reasoning connecting them are not verified, and
+   no automated check can judge whether a recommendation is commercially sound. Briefings
+   are a drafting aid for a human owner, not an unreviewed output.
 
 ---
 
 ## Tech Stack
 
 Python 3.13 · pandas · NumPy · scikit-learn · XGBoost · imbalanced-learn (SMOTE) · SHAP ·
-matplotlib · seaborn · joblib · google-generativeai (Gemini) · ReportLab · Jupyter
+matplotlib · seaborn · joblib · google-generativeai (Gemini) · ReportLab · FastAPI ·
+uvicorn · Jupyter

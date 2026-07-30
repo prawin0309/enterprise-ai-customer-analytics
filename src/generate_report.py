@@ -19,6 +19,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
 from reportlab.platypus import (
+    Image,
     KeepTogether,
     PageBreak,
     Paragraph,
@@ -35,6 +36,7 @@ from reportlab.platypus import (
 try:
     from paths import (
         CLUSTER_PROFILE_FILE as CLUSTER_FILE,
+        FIGURE_DIR,
         METRICS_FILE,
         PDF_REPORT_FILE as OUTPUT_FILE,
         PROCESSED_DIR,
@@ -46,6 +48,7 @@ try:
 except ImportError:  # imported as ``src.generate_report``
     from src.paths import (
         CLUSTER_PROFILE_FILE as CLUSTER_FILE,
+        FIGURE_DIR,
         METRICS_FILE,
         PDF_REPORT_FILE as OUTPUT_FILE,
         PROCESSED_DIR,
@@ -54,6 +57,9 @@ except ImportError:  # imported as ``src.generate_report``
         SHAP_IMPORTANCE_FILE as SHAP_FILE,
         SUMMARY_FILE as FUSION_FILE,
     )
+
+FUSION_QUALITY_FILE = REPORT_DIR / "fusion_quality.json"
+INSIGHT_AUDIT_FILE = REPORT_DIR / "insight_audit.json"
 
 BRAND_COLOR = colors.HexColor("#1F4E79")
 ACCENT_COLOR = colors.HexColor("#2E75B6")
@@ -150,6 +156,27 @@ def build_styles() -> dict:
     }
 
 
+FIGURE_WIDTH = 16.0 * cm
+
+
+def figure(name: str, caption: str, styles: dict, aspect: float) -> list:
+    """Return an image flowable plus its caption, or nothing if not rendered.
+
+    ``make_figures.py`` writes the PNGs. The report degrades to a tables-only
+    document rather than failing if that stage has not been run.
+    """
+    path = FIGURE_DIR / name
+    if not path.exists():
+        logger.warning("Figure %s missing - run src/make_figures.py", name)
+        return []
+    return [
+        Spacer(1, 0.25 * cm),
+        Image(str(path), width=FIGURE_WIDTH, height=FIGURE_WIDTH * aspect),
+        Paragraph(caption, styles["caption"]),
+        Spacer(1, 0.25 * cm),
+    ]
+
+
 def format_params(params: dict) -> str:
     """Render a hyperparameter dict as a compact ``key=value`` list."""
     return ", ".join(f"{key}={value}" for key, value in sorted(params.items()))
@@ -219,6 +246,8 @@ def build_story(styles: dict, data: dict) -> list:
     churn = metrics["churn_classification"]
     revenue = metrics["revenue_regression"]
     segmentation = metrics["segmentation"]
+    fusion_quality = data.get("fusion_quality") or {}
+    insight_audit = data.get("insight_audit") or {}
     fusion = data["fusion"]
 
     story: list = []
@@ -509,6 +538,17 @@ def build_story(styles: dict, data: dict) -> list:
             )
         )
 
+    story.extend(
+        figure(
+            "churn_roc_confusion.png",
+            "Figure 1 — Churn model ROC curve and confusion matrix on the 1,000-row "
+            "hold-out set. The 0.5 threshold trades recall for precision; 54 churners "
+            "are missed and 20 retained accounts are flagged.",
+            styles,
+            0.42,
+        )
+    )
+
     story.append(Paragraph("4.2 Explainable AI — SHAP churn drivers", styles["subheading"]))
     shap_rows = [["Rank", "Feature", "Mean |SHAP|", "Business Meaning"]]
     meanings = {
@@ -533,6 +573,17 @@ def build_story(styles: dict, data: dict) -> list:
             ]
         )
     story.append(make_table(shap_rows, styles, [1.2 * cm, 5.6 * cm, 2.4 * cm, 7.8 * cm]))
+
+    story.extend(
+        figure(
+            "churn_shap_beeswarm.png",
+            "Figure 2 — SHAP value distribution across 500 hold-out accounts. Red "
+            "points are high feature values, blue are low; points to the right push "
+            "the prediction toward churn.",
+            styles,
+            0.68,
+        )
+    )
 
     story.append(Paragraph("4.3 Revenue forecasting", styles["subheading"]))
     story.append(
@@ -568,6 +619,17 @@ def build_story(styles: dict, data: dict) -> list:
             ],
             styles,
             [4.0 * cm, 3.6 * cm, 9.4 * cm],
+        )
+    )
+
+    story.extend(
+        figure(
+            "revenue_residuals.png",
+            "Figure 3 — Revenue model diagnostics: predicted versus actual, residuals "
+            "against fitted values, and the residual distribution. Residuals are "
+            "centred and show no systematic pattern across the fitted range.",
+            styles,
+            0.30,
         )
     )
 
@@ -667,6 +729,26 @@ def build_story(styles: dict, data: dict) -> list:
     story.append(PageBreak())
 
     # --- 5. Segment profile ----------------------------------------------
+    story.extend(
+        figure(
+            "clustering_sweep.png",
+            "Figure 4 — Elbow and silhouette curves across k = 2 to 10. No k reaches "
+            "the 0.60 project target.",
+            styles,
+            0.37,
+        )
+    )
+    story.extend(
+        figure(
+            "segment_pca_scatter.png",
+            "Figure 5 — Behavioural segments projected onto two principal components "
+            "(display only; the model clusters on six), with churn rate by segment. "
+            "The groups overlap geometrically but separate sharply on churn.",
+            styles,
+            0.40,
+        )
+    )
+
     story.append(Paragraph("5. Customer Segment Profiles", styles["heading"]))
     cluster_rows = [
         [
@@ -749,6 +831,65 @@ def build_story(styles: dict, data: dict) -> list:
     )
 
     # --- 7. LLM layer -----------------------------------------------------
+    if fusion_quality:
+        story.append(Paragraph("6.1 Fusion layer validation", styles["subheading"]))
+        story.append(
+            make_table(
+                [
+                    ["Evaluation criterion", "Measure", "Result"],
+                    [
+                        "Data integrity",
+                        "Profile completeness",
+                        f"{fusion_quality['profile_completeness']:.1%} of "
+                        f"{fusion_quality['profiles_generated']:,} profiles carry "
+                        "all six blocks",
+                    ],
+                    [
+                        "Integration accuracy",
+                        "Model output consistency",
+                        f"{fusion_quality['integration_accuracy']:.1%} - revenue at "
+                        "risk reconciles to forecast x churn probability",
+                    ],
+                    [
+                        "Logical consistency",
+                        "Risk vs CRM health",
+                        f"Spearman {fusion_quality['risk_health_alignment_spearman']:.3f} "
+                        "- churn risk falls as health rises, as expected",
+                    ],
+                    [
+                        "Grain preservation",
+                        "One profile per customer",
+                        "Yes" if fusion_quality["grain_preserved"] else "No",
+                    ],
+                    [
+                        "Scalability",
+                        "Profile generation rate",
+                        f"{fusion_quality['profiles_per_second']:,.0f} profiles per "
+                        "second, single process",
+                    ],
+                    [
+                        "Business utility",
+                        "Account prioritisation",
+                        f"{fusion_quality['high_risk_share_of_accounts']:.1%} of "
+                        "accounts carry "
+                        f"{fusion_quality['high_risk_share_of_revenue_at_risk']:.1%} "
+                        "of total revenue at risk",
+                    ],
+                ],
+                styles,
+                [4.2 * cm, 4.2 * cm, 8.6 * cm],
+            )
+        )
+        story.append(
+            Paragraph(
+                "The prioritisation figure is the one that matters commercially: "
+                "concentrating retention effort on the high-risk band reaches the "
+                "large majority of exposed revenue while contacting roughly a tenth "
+                "of the book. Full detail in reports/fusion_quality.json.",
+                styles["caption"],
+            )
+        )
+
     story.append(Paragraph("7. LLM-Based Executive Insight Generation", styles["heading"]))
     story.append(
         Paragraph(
@@ -763,6 +904,23 @@ def build_story(styles: dict, data: dict) -> list:
             styles["body"],
         )
     )
+    if insight_audit:
+        story.append(
+            Paragraph(
+                "<b>Factuality audit.</b> Every currency figure in every briefing is checked "
+                "against the source profile, accepting monthly, quarterly and annual "
+                "restatements and rounding within one percent. Result: "
+                f"{insight_audit['briefings_fully_traceable']} of "
+                f"{insight_audit['briefings_audited']} briefings are fully "
+                f"traceable, with {insight_audit['figures_requiring_review']} of "
+                f"{insight_audit['currency_figures_quoted']} quoted figures flagged "
+                "for review. A flagged figure is a review candidate rather than proof "
+                "of fabrication - the model may legitimately combine two profile "
+                "values. Detail in reports/insight_audit.json.",
+                styles["body"],
+            )
+        )
+
     story.append(
         Paragraph(
             "Implementation note: the originally specified gemini-pro model has been "
@@ -802,9 +960,11 @@ def build_story(styles: dict, data: dict) -> list:
         "<b>Static snapshot.</b> The system scores a point-in-time extract. Production "
         "deployment needs scheduled re-scoring, drift monitoring and retraining "
         "triggers.",
-        "<b>Insight validation.</b> LLM briefings are constrained by prompt design but "
-        "not yet automatically checked; a factuality validator comparing generated "
-        "numbers against the source profile is the natural next step.",
+        "<b>Insight validation.</b> The factuality audit checks currency figures only. "
+        "Percentages, dates, named roles and the reasoning connecting them are not "
+        "verified, and no automated check can assess whether a recommendation is "
+        "commercially sound. Briefings remain a drafting aid for a human owner, not "
+        "an unreviewed output.",
     ]:
         story.append(Paragraph(text, styles["bullet"], bulletText="\u2022"))
 
@@ -820,6 +980,11 @@ def build_story(styles: dict, data: dict) -> list:
                 ["LLM insight generation", "src/llm_insights.py"],
                 ["PDF report generator", "src/generate_report.py"],
                 ["Executed analysis notebook", "notebooks/EDA_and_Modeling.ipynb"],
+                ["Report figures", "reports/figures/*.png"],
+                ["Figure generation", "src/make_figures.py"],
+                ["Scoring API (FastAPI)", "src/api.py"],
+                ["Fusion layer quality report", "reports/fusion_quality.json"],
+                ["LLM factuality audit", "reports/insight_audit.json"],
                 ["Serialised models", "models/*.pkl"],
                 ["Processed dataset", "data/processed/processed_customer_data.csv"],
                 ["Customer intelligence profiles", "data/processed/customer_profiles.json"],
@@ -839,10 +1004,20 @@ def build_story(styles: dict, data: dict) -> list:
 # --------------------------------------------------------------------------- #
 
 
+def load_optional_json(path) -> dict:
+    """Load a JSON artefact, or return an empty dict if its stage has not run."""
+    if not path.exists():
+        logger.warning("%s missing - its section will be omitted", path.name)
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def load_inputs() -> dict:
     """Load every artefact the report renders."""
     return {
         "metrics": json.loads(METRICS_FILE.read_text(encoding="utf-8")),
+        "fusion_quality": load_optional_json(FUSION_QUALITY_FILE),
+        "insight_audit": load_optional_json(INSIGHT_AUDIT_FILE),
         "shap": pd.read_csv(SHAP_FILE),
         "fusion": pd.read_csv(FUSION_FILE),
         "clusters": pd.read_csv(CLUSTER_FILE, index_col=0),
