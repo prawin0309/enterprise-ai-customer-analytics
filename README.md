@@ -5,6 +5,8 @@ Predicts churn, forecasts next-quarter revenue, segments customers behaviourally
 three model outputs into a unified per-account intelligence profile, and uses an LLM to
 generate executive-level briefings.
 
+**Repository:** <https://github.com/prawin0309/enterprise-ai-customer-analytics>
+
 **Domain:** SaaS / CRM Analytics · Customer Intelligence · AI-driven Business Analytics
 
 ---
